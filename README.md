@@ -1,5 +1,7 @@
 # 📚 RevisaFácil
 
+![Dashboard Principal](assets/dashboard.png)
+
 **RevisaFácil** é um gestor de estudos inteligente desenvolvido para Windows, focado na fixação de conteúdo por meio de ciclos de revisão automatizados. Ideal para concurseiros e estudantes de Direito que precisam dominar grandes volumes de matérias.
 
 O sistema substitui planilhas complexas, automatizando o cálculo de prazos e oferecendo lembretes ativos via Telegram.
