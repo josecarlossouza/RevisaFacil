@@ -1,0 +1,148 @@
+﻿{
+  "NomeTema": "Edital PGE",
+  "Disciplinas": [
+    {
+      "Nome": "DIREITO CONSTITUCIONAL",
+      "Assuntos": [
+        { "Titulo": "Teoria da Constituição e Poder constituinte", "DataInicio": "2025-10-14T00:00:00" },
+        { "Titulo": "Controle de Constitucionalidade", "DataInicio": "2026-01-22T00:00:00" },
+        { "Titulo": "Funções Essenciais à Justiça", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Ordem Econômica e Financeira", "DataInicio": "2026-02-23T00:00:00" },
+        { "Titulo": "Direitos Individuais - Remédios e Garantias", "DataInicio": "2025-12-16T00:00:00" },
+        { "Titulo": "Separação dos Poderes (Legislativo, Executivo e Judiciário)", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Administração Pública – Geral e Servidores", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Teoria dos Direitos Fundamentais", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Direitos Sociais", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Organização do Poder Judiciário", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Organização Político-Administrativa do Estado", "DataInicio": "2026-02-04T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "DIREITO CIVIL",
+      "Assuntos": [
+        { "Titulo": "Lei de Introdução", "DataInicio": "2025-09-22T00:00:00" },
+        { "Titulo": "(Parte Geral) Pessoas Naturais", "DataInicio": "2026-01-28T00:00:00" },
+        { "Titulo": "(Parte Geral) Pessoas Jurídica", "DataInicio": "2025-09-29T00:00:00" },
+        { "Titulo": "(Parte Geral) Domicílio e bens", "DataInicio": "2025-10-20T00:00:00" },
+        { "Titulo": "Fatos Jurídicos, Interpretações e Defeitos", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Simulação, Invalidade, Prescrição e Decadência", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Obrigações", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Contratos", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Responsabilidade Civil", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Direito Reais", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "DIREITO ADMINISTRATIVO",
+      "Assuntos": [
+        { "Titulo": "Conceitos iniciais e Regime jurídico", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Organização da Administração Pública", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Agentes públicos e Lei 8.112/90", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Poderes da Administração", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Atos administrativos", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Licitações e Contratos | Lei nº 14.133/21", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Serviços Públicos", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Responsabilidade civil do estado", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Processo Administrativo | Lei nº 9.784/99", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Improbidade administrativa | Lei nº 8.429/92", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "EMPRESARIAL",
+      "Assuntos": [
+        { "Titulo": "Teoria Geral (Empresário e Estabelecimento)", "DataInicio": "2025-10-23T00:00:00" },
+        { "Titulo": "Direito Societário (Teoria Geral e Espécies)", "DataInicio": "2026-01-13T00:00:00" },
+        { "Titulo": "Títulos de Crédito e Lei Cambial", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Propriedade Industrial e Concorrência", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Direito Falimentar e Recuperacional", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "LEI DAS S.A", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "PROCESSO CIVIL",
+      "Assuntos": [
+        { "Titulo": "Jurisdição e Competência no Processo Civil", "DataInicio": "2025-06-16T00:00:00" },
+        { "Titulo": "AÇÃO", "DataInicio": "2025-09-30T00:00:00" },
+        { "Titulo": "Sujeitos da Relação Processual", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Intervenção de Terceiro", "DataInicio": "2025-10-16T00:00:00" },
+        { "Titulo": "Processo de Execução", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Recursos", "DataInicio": "2025-12-10T00:00:00" },
+        { "Titulo": "Cumprimento de Sentença", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "FAZENDA PÚBLICA EM JUÍZO",
+      "Assuntos": [
+        { "Titulo": "Regime Processual (Prazos e Competência)", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Precatórios/RPVs e Impugnação", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Tutelas Provisórias e Limitações", "DataInicio": "2026-03-16T00:00:00" },
+        { "Titulo": "Ação Rescisória", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Mandado de segurança", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "PENAL",
+      "Assuntos": [
+        { "Titulo": "TEORIA GERAL DO CRIME", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "FATO TÍPICO", "DataInicio": "2025-10-01T00:00:00" },
+        { "Titulo": "ILICITUDE", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "CULPABILIDADE", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "AÇÃO PENAL", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "PROCESSO PENAL",
+      "Assuntos": [
+        { "Titulo": "PRINCÍPIO E SISTEMAS PROCESSUAIS", "DataInicio": "2025-10-17T00:00:00" },
+        { "Titulo": "LEI PROCESSUAL NO TEMPO E ESPAÇO", "DataInicio": "2025-12-11T00:00:00" },
+        { "Titulo": "JUIZ DAS GARANTIAS", "DataInicio": "2025-12-18T00:00:00" },
+        { "Titulo": "INQUÉRITO POLICIAL", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "PRISÃO E MEDIDAS CAUTELARES", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "TRIBUTÁRIO",
+      "Assuntos": [
+        { "Titulo": "SISTEMA TRIBUTÁRIO NACIONAL", "DataInicio": "2025-10-07T00:00:00" },
+        { "Titulo": "Fontes", "DataInicio": "2026-02-09T00:00:00" },
+        { "Titulo": "Sujeitos e Obrigação Tributária", "DataInicio": "2026-03-05T00:00:00" },
+        { "Titulo": "Repartição de Receitas", "DataInicio": "2026-02-09T00:00:00" },
+        { "Titulo": "Execução Fiscal", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "DIREITO DO TRABALHO",
+      "Assuntos": [
+        { "Titulo": "Sujeitos do contrato de trabalho", "DataInicio": "2026-03-03T00:00:00" },
+        { "Titulo": "Grupo econômico", "DataInicio": "2026-03-03T00:00:00" },
+        { "Titulo": "PODERES DO EMPREGADOR", "DataInicio": "2023-03-03T00:00:00" },
+        { "Titulo": "JORNADA DE TRABALHO", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "PROCESSO DO TRABALHO",
+      "Assuntos": [
+        { "Titulo": "DISSÍDIO INDIVIDUAL (PROCEDIMENTOS)", "DataInicio": "2026-02-11T00:00:00" },
+        { "Titulo": "PARTES E PROCURADORES", "DataInicio": "2026-03-04T00:00:00" },
+        { "Titulo": "RECURSOS", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "FINANCEIRO",
+      "Assuntos": [
+        { "Titulo": "Orçamento Público e Princípios", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Receitas e Despesas públicas", "DataInicio": "2026-02-12T00:00:00" },
+        { "Titulo": "Endividamento público", "DataInicio": "2026-03-04T00:00:00" },
+        { "Titulo": "Lei de Responsabilidade Fiscal", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    },
+    {
+      "Nome": "AMBIENTAL",
+      "Assuntos": [
+        { "Titulo": "Meio Ambiente e Disposições Constitucionais", "DataInicio": "2025-10-24T00:00:00" },
+        { "Titulo": "Responsabilidade Ambiental", "DataInicio": "2026-04-10T00:00:00" },
+        { "Titulo": "Licenciamento e PNMA", "DataInicio": "2026-04-10T00:00:00" }
+      ]
+    }
+  ]
+}

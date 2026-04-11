@@ -1,0 +1,51 @@
+﻿<Page x:Class="RevisaFacil.Views.MainView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+      Title="Painel Principal" Background="#F4F7F6">
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Resumo do Desempenho" FontSize="26" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,30"/>
+
+        <UniformGrid Grid.Row="1" Columns="3" VerticalAlignment="Top">
+            <Border Background="White" CornerRadius="10" Margin="10" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="Total de Assuntos" HorizontalAlignment="Center" Foreground="#7F8C8D"/>
+                    <TextBlock x:Name="txtTotalAssuntos" Text="0" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#2C3E50"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="White" CornerRadius="10" Margin="10" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="Concluídos (5 Revs)" HorizontalAlignment="Center" Foreground="#7F8C8D"/>
+                    <TextBlock x:Name="txtConcluidos" Text="0" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#27AE60"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="White" CornerRadius="10" Margin="10" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="Pendentes" HorizontalAlignment="Center" Foreground="#7F8C8D"/>
+                    <TextBlock x:Name="txtPendentes" Text="0" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#E74C3C"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <Border Grid.Row="2" Background="White" CornerRadius="10" Margin="10" Padding="20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Distribuição por Disciplina" FontWeight="SemiBold" Foreground="#34495E" Margin="0,0,0,10"/>
+
+                <lvc:PieChart x:Name="chartDisciplinas" Grid.Row="1" LegendLocation="Bottom" Hoverable="True" DataTooltip="{x:Null}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>
