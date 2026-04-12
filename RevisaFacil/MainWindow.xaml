@@ -4,6 +4,7 @@
         Title="RevisaFacil - Gerenciador de Estudos" Height="650" Width="1100"
         WindowStartupLocation="CenterScreen">
 
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220"/>

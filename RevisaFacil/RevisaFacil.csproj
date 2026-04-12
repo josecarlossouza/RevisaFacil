@@ -6,10 +6,17 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>RevisaFacil_icon_clean-removebg-preview.ico</ApplicationIcon>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Models\Assunto.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="RevisaFacil_icon_clean-removebg-preview.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,4 +43,14 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+	  <None Update="Edital PGE.db">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="bin\Debug\net8.0-windows\" />
+  </ItemGroup>
+	
 </Project>

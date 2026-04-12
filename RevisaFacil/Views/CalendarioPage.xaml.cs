@@ -1,110 +1,118 @@
-﻿using System;
+﻿using RevisaFacil.Data;
+using RevisaFacil.Helpers;
+using RevisaFacil.Models;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using RevisaFacil.Data; // Importante para acessar o EstudoDbContext
-using RevisaFacil.Helpers;
 
 namespace RevisaFacil.Views
 {
-    public partial class CalendarioPage : Page
+    public partial class CalendarioPage : Page, INotifyPropertyChanged
     {
         private DateTime _dataReferencia;
+        private HashSet<DateTime> _datasComNotas = new HashSet<DateTime>();
 
-        // Propriedade que o XAML usará para verificar quais dias colorir
-        // Usamos HashSet para que a busca seja instantânea
-        public HashSet<DateTime> DatasComNotas { get; set; } = new HashSet<DateTime>();
+        // Esta lista será vinculada ao ItemsControl do seu XAML
+        public ObservableCollection<DateTime?> DiasDoMes { get; set; } = new ObservableCollection<DateTime?>();
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public HashSet<DateTime> DatasComNotas
+        {
+            get => _datasComNotas;
+            set { _datasComNotas = value; OnPropertyChanged(); }
+        }
 
         public CalendarioPage()
         {
             InitializeComponent();
             _dataReferencia = DateTime.Today;
 
-            // Define o contexto de dados para a própria página para o MultiBinding funcionar
-            this.DataContext = this;
+            // Sincroniza as revisões globais ao abrir
+            TemaManager.SincronizarCalendarioGlobal();
 
-            GerarGradeCalendario();
+            CarregarDatasComNotas();
+
+            this.DataContext = this;
+            MontarCalendario();
         }
 
-        private void GerarGradeCalendario()
+        private void CarregarDatasComNotas()
         {
-            // 1. Busca no banco de dados todas as datas que possuem anotações salvas
-            try
+            using (var db = new EstudoDbContext())
             {
-                using (var db = new EstudoDbContext())
-                {
-                    DatasComNotas = new HashSet<DateTime>(
-                        db.NotasCalendario.Select(n => n.Data.Date).ToList()
-                    );
-                }
+                var datas = db.NotasCalendario
+                              .Select(n => n.Data.Date)
+                              .Distinct()
+                              .ToList();
+
+                DatasComNotas = new HashSet<DateTime>(datas);
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Erro ao carregar notas: " + ex.Message);
-            }
+        }
 
-            // 2. Atualiza o título do mês/ano
-            CultureInfo culturaPt = new CultureInfo("pt-BR");
-            txtMesAno.Text = culturaPt.DateTimeFormat.GetMonthName(_dataReferencia.Month).ToUpper() + $" DE {_dataReferencia.Year}";
+        private void MontarCalendario()
+        {
+            // Atualiza o cabeçalho
+            txtMesAno.Text = _dataReferencia.ToString("MMMM yyyy").ToUpper();
 
-            List<DateTime?> listaDias = new List<DateTime?>();
+            DiasDoMes.Clear();
 
-            // 3. Lógica para alinhar o início do mês na grade
-            DateTime primeiroDiaDoMes = new DateTime(_dataReferencia.Year, _dataReferencia.Month, 1);
-            int diaSemanaComeco = (int)primeiroDiaDoMes.DayOfWeek;
-
-            // Adiciona espaços vazios até o dia da semana em que o mês começa
-            for (int i = 0; i < diaSemanaComeco; i++)
-            {
-                listaDias.Add(null);
-            }
-
-            // Adiciona os dias reais do mês
+            DateTime primeiroDiaMes = new DateTime(_dataReferencia.Year, _dataReferencia.Month, 1);
             int diasNoMes = DateTime.DaysInMonth(_dataReferencia.Year, _dataReferencia.Month);
-            for (int dia = 1; dia <= diasNoMes; dia++)
+            int diaDaSemanaInicio = (int)primeiroDiaMes.DayOfWeek;
+
+            // 1. Adiciona espaços vazios (null) para alinhar o dia 1 ao dia da semana correto
+            for (int i = 0; i < diaDaSemanaInicio; i++)
             {
-                listaDias.Add(new DateTime(_dataReferencia.Year, _dataReferencia.Month, dia));
+                DiasDoMes.Add(null);
             }
 
-            // 4. Atualiza a interface (forçamos o ItemsSource a null para garantir o refresh das cores)
-            icDiasCalendario.ItemsSource = null;
-            icDiasCalendario.ItemsSource = listaDias;
+            // 2. Adiciona os dias reais do mês
+            for (int i = 1; i <= diasNoMes; i++)
+            {
+                DiasDoMes.Add(new DateTime(_dataReferencia.Year, _dataReferencia.Month, i));
+            }
+
+            // 3. Atribui a lista ao ItemsControl do seu XAML
+            icDiasCalendario.ItemsSource = DiasDoMes;
         }
 
         private void btnMesAnterior_Click(object sender, RoutedEventArgs e)
         {
             _dataReferencia = _dataReferencia.AddMonths(-1);
-            GerarGradeCalendario();
+            MontarCalendario();
         }
 
         private void btnProximoMes_Click(object sender, RoutedEventArgs e)
         {
             _dataReferencia = _dataReferencia.AddMonths(1);
-            GerarGradeCalendario();
+            MontarCalendario();
         }
 
         private void BorderDia_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            // Verifica se foi um clique duplo com o botão esquerdo
-            if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left)
+            if (sender is FrameworkElement element && element.Tag is DateTime dataSelecionada)
             {
-                if (sender is Border card && card.Tag is DateTime dataClicada)
+                var popUp = new PopUpNotaWindow(dataSelecionada);
+                if (popUp.ShowDialog() == true)
                 {
-                    // Abre a janela de anotação (PopUp)
-                    var popUp = new PopUpNotaWindow(dataClicada);
-                    popUp.Owner = Window.GetWindow(this);
-
-                    // Se a janela for fechada após salvar (DialogResult = true)
-                    if (popUp.ShowDialog() == true)
-                    {
-                        // Recarrega a grade para pintar o card caso uma nova nota tenha sido criada
-                        GerarGradeCalendario();
-                    }
+                    // Recarrega as cores após fechar o popup
+                    CarregarDatasComNotas();
+                    // Força a atualização visual do ItemsControl
+                    icDiasCalendario.Items.Refresh();
                 }
             }
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

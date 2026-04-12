@@ -18,6 +18,7 @@ namespace RevisaFacil.Views
         {
             InitializeComponent();
             CarregarDados();
+            TemaManager.SincronizarCalendarioGlobal();
         }
 
         private void CarregarDados()
@@ -39,26 +40,19 @@ namespace RevisaFacil.Views
                 txtR5.Text = config.Intervalo5.ToString();
 
                 cbFiltroDisciplina.ItemsSource = db.Disciplinas.OrderBy(d => d.Nome).ToList();
-
-                var lista = db.Assuntos.Include(a => a.Disciplina).ToList();
-                dgAssuntos.ItemsSource = lista;
+                dgAssuntos.ItemsSource = db.Assuntos.Include(a => a.Disciplina).ToList();
             }
         }
 
-        // NOVA LÓGICA: Clique Duplo para cor ou edição
         private void DataGridRow_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (sender is DataGridRow row && row.Item is Assunto assunto)
             {
-                var elementoClicado = e.OriginalSource as FrameworkElement;
-                var cell = FindParent<DataGridCell>(elementoClicado);
-
-                if (cell != null)
+                var cell = FindParent<DataGridCell>(e.OriginalSource as FrameworkElement);
+                if (cell != null && cell.Column.Header != null)
                 {
-                    string header = cell.Column.Header.ToString();
-
-                    // Se clicar em Disciplina ou Assunto, alterna a cor
-                    if (header == "Disciplina" || header == "Assunto")
+                    string h = cell.Column.Header.ToString();
+                    if (h == "Disciplina" || h == "Assunto")
                     {
                         using (var db = new EstudoDbContext())
                         {
@@ -67,42 +61,19 @@ namespace RevisaFacil.Views
                             db.SaveChanges();
                         }
                         dgAssuntos.Items.Refresh();
-                        e.Handled = true; // Impede comportamento extra
+                        e.Handled = true;
                     }
-                    // Se clicar em "Início", não faz nada aqui (deixa o WPF abrir a edição)
                 }
             }
         }
 
         private static T FindParent<T>(DependencyObject child) where T : DependencyObject
         {
+            if (child == null) return null;
             DependencyObject parentObject = VisualTreeHelper.GetParent(child);
             if (parentObject == null) return null;
-            T parent = parentObject as T;
-            return parent ?? FindParent<T>(parentObject);
-        }
-
-        private void Filtro_Changed(object sender, EventArgs e)
-        {
-            using (var db = new EstudoDbContext())
-            {
-                var query = db.Assuntos.Include(a => a.Disciplina).AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(txtBuscaAssunto.Text))
-                    query = query.Where(a => a.Titulo.ToLower().Contains(txtBuscaAssunto.Text.ToLower()));
-
-                if (cbFiltroDisciplina.SelectedValue is int id)
-                    query = query.Where(a => a.DisciplinaId == id);
-
-                dgAssuntos.ItemsSource = query.ToList();
-            }
-        }
-
-        private void LimparFiltros_Click(object sender, RoutedEventArgs e)
-        {
-            txtBuscaAssunto.Clear();
-            cbFiltroDisciplina.SelectedIndex = -1;
-            CarregarDados();
+            if (parentObject is T parent) return parent;
+            return FindParent<T>(parentObject);
         }
 
         private void MarcarRevisao_Click(object sender, RoutedEventArgs e)
@@ -118,52 +89,37 @@ namespace RevisaFacil.Views
                     else if (r == 3) assunto.Rev3Concluida = !assunto.Rev3Concluida;
                     else if (r == 4) assunto.Rev4Concluida = !assunto.Rev4Concluida;
                     else if (r == 5) assunto.Rev5Concluida = !assunto.Rev5Concluida;
-
                     db.SaveChanges();
                 }
                 dgAssuntos.Items.Refresh();
             }
         }
 
-        private void Intervalo_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                ProcessarMudancaIntervalo(sender as TextBox);
-                Keyboard.ClearFocus();
-            }
-        }
-
-        private void Intervalo_LostFocus(object sender, RoutedEventArgs e)
-        {
-            ProcessarMudancaIntervalo(sender as TextBox);
-        }
-
         private void ProcessarMudancaIntervalo(TextBox tb)
         {
-            if (tb != null && int.TryParse(tb.Text, out int novoValor))
+            if (tb != null && int.TryParse(tb.Text, out int novo))
             {
                 int r = int.Parse(tb.Tag.ToString());
                 using (var db = new EstudoDbContext())
                 {
                     var config = db.Configuracoes.First();
-                    if (r == 1) config.Intervalo1 = novoValor;
-                    else if (r == 2) config.Intervalo2 = novoValor;
-                    else if (r == 3) config.Intervalo3 = novoValor;
-                    else if (r == 4) config.Intervalo4 = novoValor;
-                    else if (r == 5) config.Intervalo5 = novoValor;
+                    if (r == 1) config.Intervalo1 = novo;
+                    else if (r == 2) config.Intervalo2 = novo;
+                    else if (r == 3) config.Intervalo3 = novo;
+                    else if (r == 4) config.Intervalo4 = novo;
+                    else if (r == 5) config.Intervalo5 = novo;
 
-                    var lista = db.Assuntos.ToList();
-                    foreach (var a in lista)
+                    foreach (var a in db.Assuntos)
                     {
-                        if (r == 1) a.Int1 = novoValor;
-                        else if (r == 2) a.Int2 = novoValor;
-                        else if (r == 3) a.Int3 = novoValor;
-                        else if (r == 4) a.Int4 = novoValor;
-                        else if (r == 5) a.Int5 = novoValor;
+                        if (r == 1) a.Int1 = novo;
+                        else if (r == 2) a.Int2 = novo;
+                        else if (r == 3) a.Int3 = novo;
+                        else if (r == 4) a.Int4 = novo;
+                        else if (r == 5) a.Int5 = novo;
                     }
                     db.SaveChanges();
                 }
+                TemaManager.SincronizarCalendarioGlobal();
                 CarregarDados();
             }
         }
@@ -172,40 +128,46 @@ namespace RevisaFacil.Views
         {
             if (e.EditAction == DataGridEditAction.Commit && e.Row.Item is Assunto assunto)
             {
-                // Delay para garantir que o binding da data seja atualizado antes de salvar
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    try
+                Dispatcher.BeginInvoke(new Action(() => {
+                    using (var db = new EstudoDbContext())
                     {
-                        using (var db = new EstudoDbContext())
-                        {
-                            db.Entry(assunto).State = EntityState.Modified;
-                            db.SaveChanges();
-                        }
-                        dgAssuntos.Items.Refresh();
+                        db.Entry(assunto).State = EntityState.Modified;
+                        db.SaveChanges();
                     }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Erro ao salvar data: {ex.Message}");
-                    }
+                    TemaManager.SincronizarCalendarioGlobal();
+                    dgAssuntos.Items.Refresh();
                 }), System.Windows.Threading.DispatcherPriority.Background);
             }
         }
 
         private void btnApagarAssunto_Click(object sender, RoutedEventArgs e)
         {
-            if (dgAssuntos.SelectedItem is Assunto selecionado)
+            if (dgAssuntos.SelectedItem is Assunto sel)
             {
-                if (MessageBox.Show($"Deseja excluir '{selecionado.Titulo}'?", "Confirmação", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"Excluir '{sel.Titulo}'?", "Confirmação", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    using (var db = new EstudoDbContext())
-                    {
-                        db.Assuntos.Remove(selecionado);
-                        db.SaveChanges();
-                    }
+                    using (var db = new EstudoDbContext()) { db.Assuntos.Remove(sel); db.SaveChanges(); }
+                    TemaManager.SincronizarCalendarioGlobal();
                     CarregarDados();
                 }
             }
         }
+
+        private void Filtro_Changed(object sender, EventArgs e)
+        {
+            using (var db = new EstudoDbContext())
+            {
+                var query = db.Assuntos.Include(a => a.Disciplina).AsQueryable();
+                if (!string.IsNullOrWhiteSpace(txtBuscaAssunto.Text))
+                    query = query.Where(a => a.Titulo.ToLower().Contains(txtBuscaAssunto.Text.ToLower()));
+                if (cbFiltroDisciplina.SelectedValue is int id)
+                    query = query.Where(a => a.DisciplinaId == id);
+                dgAssuntos.ItemsSource = query.ToList();
+            }
+        }
+
+        private void LimparFiltros_Click(object sender, RoutedEventArgs e) { txtBuscaAssunto.Clear(); cbFiltroDisciplina.SelectedIndex = -1; CarregarDados(); }
+        private void Intervalo_KeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.Enter) { ProcessarMudancaIntervalo(sender as TextBox); Keyboard.ClearFocus(); } }
+        private void Intervalo_LostFocus(object sender, RoutedEventArgs e) => ProcessarMudancaIntervalo(sender as TextBox);
     }
 }

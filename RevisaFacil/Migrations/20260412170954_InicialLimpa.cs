@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RevisaFacil.Migrations
 {
     /// <inheritdoc />
-    public partial class AdicionarConfiguracao : Migration
+    public partial class InicialLimpa : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -42,6 +42,21 @@ namespace RevisaFacil.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "NotasCalendario",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Data = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Conteudo = table.Column<string>(type: "TEXT", nullable: false),
+                    AssuntoId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NotasCalendario", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Assuntos",
                 columns: table => new
                 {
@@ -49,6 +64,7 @@ namespace RevisaFacil.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Titulo = table.Column<string>(type: "TEXT", nullable: false),
                     DisciplinaId = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsDestacado = table.Column<bool>(type: "INTEGER", nullable: false),
                     DataInicio = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Int1 = table.Column<int>(type: "INTEGER", nullable: false),
                     Int2 = table.Column<int>(type: "INTEGER", nullable: false),
@@ -86,6 +102,9 @@ namespace RevisaFacil.Migrations
 
             migrationBuilder.DropTable(
                 name: "Configuracoes");
+
+            migrationBuilder.DropTable(
+                name: "NotasCalendario");
 
             migrationBuilder.DropTable(
                 name: "Disciplinas");

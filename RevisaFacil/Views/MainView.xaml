@@ -4,48 +4,222 @@
       xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
       Title="Painel Principal" Background="#F4F7F6">
 
-    <Grid Margin="30">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <TextBlock Text="Resumo do Desempenho" FontSize="26" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,30"/>
+            <!-- Título -->
+            <TextBlock Grid.Row="0" Text="Resumo do Desempenho" FontSize="26" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,20"/>
 
-        <UniformGrid Grid.Row="1" Columns="3" VerticalAlignment="Top">
-            <Border Background="White" CornerRadius="10" Margin="10" Padding="20">
-                <StackPanel>
-                    <TextBlock Text="Total de Assuntos" HorizontalAlignment="Center" Foreground="#7F8C8D"/>
-                    <TextBlock x:Name="txtTotalAssuntos" Text="0" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#2C3E50"/>
-                </StackPanel>
-            </Border>
+            <!-- Cards de resumo geral -->
+            <UniformGrid Grid.Row="1" Columns="3" VerticalAlignment="Top" Margin="0,0,0,20">
+                <Border Background="White" CornerRadius="10" Margin="5" Padding="20">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Total de Assuntos" HorizontalAlignment="Center" Foreground="#7F8C8D" FontSize="12"/>
+                        <TextBlock x:Name="txtTotalAssuntos" Text="0" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#2C3E50"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="White" CornerRadius="10" Margin="5" Padding="20">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Concluídos (5 Revs)" HorizontalAlignment="Center" Foreground="#7F8C8D" FontSize="12"/>
+                        <TextBlock x:Name="txtConcluidos" Text="0" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#27AE60"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="White" CornerRadius="10" Margin="5" Padding="20">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Pendentes" HorizontalAlignment="Center" Foreground="#7F8C8D" FontSize="12"/>
+                        <TextBlock x:Name="txtPendentes" Text="0" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#E74C3C"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
 
-            <Border Background="White" CornerRadius="10" Margin="10" Padding="20">
-                <StackPanel>
-                    <TextBlock Text="Concluídos (5 Revs)" HorizontalAlignment="Center" Foreground="#7F8C8D"/>
-                    <TextBlock x:Name="txtConcluidos" Text="0" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#27AE60"/>
-                </StackPanel>
-            </Border>
+            <!-- Linha inferior: Gráfico + Tabela de estatísticas -->
+            <Grid Grid.Row="2" Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1.6*"/>
+                </Grid.ColumnDefinitions>
 
-            <Border Background="White" CornerRadius="10" Margin="10" Padding="20">
-                <StackPanel>
-                    <TextBlock Text="Pendentes" HorizontalAlignment="Center" Foreground="#7F8C8D"/>
-                    <TextBlock x:Name="txtPendentes" Text="0" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#E74C3C"/>
-                </StackPanel>
-            </Border>
-        </UniformGrid>
+                <!-- Gráfico de Pizza -->
+                <Border Grid.Column="0" Background="White" CornerRadius="10" Margin="5" Padding="20" MinHeight="300">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Distribuição por Disciplina" FontWeight="SemiBold" Foreground="#34495E" Margin="0,0,0,10"/>
+                        <lvc:PieChart x:Name="chartDisciplinas" Grid.Row="1" LegendLocation="Bottom" Hoverable="True" DataTooltip="{x:Null}"/>
+                    </Grid>
+                </Border>
 
-        <Border Grid.Row="2" Background="White" CornerRadius="10" Margin="10" Padding="20">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <TextBlock Text="Distribuição por Disciplina" FontWeight="SemiBold" Foreground="#34495E" Margin="0,0,0,10"/>
+                <!-- Tabela de Estatísticas por Disciplina -->
+                <Border Grid.Column="1" Background="White" CornerRadius="10" Margin="5" Padding="20">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                <lvc:PieChart x:Name="chartDisciplinas" Grid.Row="1" LegendLocation="Bottom" Hoverable="True" DataTooltip="{x:Null}"/>
+                        <TextBlock Text="Desempenho por Disciplina" FontWeight="SemiBold" Foreground="#34495E" Margin="0,0,0,10"/>
+
+                        <DataGrid Grid.Row="1" x:Name="dgEstatisticas"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserResizeRows="False"
+                                  IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal"
+                                  BorderThickness="0"
+                                  Background="White"
+                                  RowBackground="White"
+                                  AlternatingRowBackground="#FAFAFA"
+                                  HeadersVisibility="Column"
+                                  FontSize="12">
+
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#F0F3F4"/>
+                                    <Setter Property="Foreground" Value="#2C3E50"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Padding" Value="8,6"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+
+                            <DataGrid.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="8,5"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#EBF5FB"/>
+                                            <Setter Property="Foreground" Value="#2C3E50"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.CellStyle>
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Disciplina" Binding="{Binding NomeDisciplina}" Width="*" />
+                                <DataGridTextColumn Header="Assuntos" Binding="{Binding TotalAssuntos}" Width="65">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Taxa de conclusão com barra de progresso embutida -->
+                                <DataGridTemplateColumn Header="Conclusão" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="4,3">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <TextBlock Grid.Row="0"
+                                                           Text="{Binding TaxaConclusaoTexto}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{Binding CorTaxa}"
+                                                           HorizontalAlignment="Center"
+                                                           FontSize="11"/>
+                                                <Border Grid.Row="1" Background="#ECF0F1" CornerRadius="3" Height="5" Margin="0,2,0,0">
+                                                    <Border x:Name="barraProgresso"
+                                                            Background="{Binding CorTaxa}"
+                                                            CornerRadius="3"
+                                                            HorizontalAlignment="Left"
+                                                            Width="{Binding LarguraBarra}"/>
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Atraso médio com ícone de alerta -->
+                                <DataGridTemplateColumn Header="Atraso Médio" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding IconeAtraso}" FontSize="12" Margin="0,0,3,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding AtrasoMedioTexto}"
+                                                           Foreground="{Binding CorAtraso}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="12"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Atrasados" Binding="{Binding RevisoesAtrasadas}" Width="80">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="Foreground" Value="#E74C3C"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
             </Grid>
-        </Border>
-    </Grid>
+
+            <!-- Card de resumo de atrasos do dia -->
+            <Border Grid.Row="3" Background="White" CornerRadius="10" Margin="5,0,5,10" Padding="20">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="📊 Hoje:" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,25,0">
+                        <TextBlock Text="Revisões para hoje: " Foreground="#7F8C8D" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtRevisoesHoje" Text="0" FontWeight="Bold" Foreground="#2980B9" VerticalAlignment="Center" FontSize="16"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="0,0,25,0">
+                        <TextBlock Text="Em atraso: " Foreground="#7F8C8D" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtRevisoesAtrasadas" Text="0" FontWeight="Bold" Foreground="#E74C3C" VerticalAlignment="Center" FontSize="16"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" Orientation="Horizontal">
+                        <TextBlock Text="Revisões concluídas hoje: " Foreground="#7F8C8D" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtConcluidasHoje" Text="0" FontWeight="Bold" Foreground="#27AE60" VerticalAlignment="Center" FontSize="16"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </ScrollViewer>
 </Page>
