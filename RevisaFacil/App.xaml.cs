@@ -1,6 +1,8 @@
-﻿using System.Windows;
-using System.Windows.Markup;
+﻿using RevisaFacil.Data;
+using RevisaFacil.Helpers;
 using System.Globalization;
+using System.Windows;
+using System.Windows.Markup;
 
 namespace RevisaFacil
 {
@@ -18,6 +20,12 @@ namespace RevisaFacil
                 typeof(FrameworkElement),
                 new FrameworkPropertyMetadata(
                     XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
+
+            // Inicializa o banco e verifica o Seed
+            using (var db = new EstudoDbContext())
+            {
+                TemaManager.SeedDatabase(db);
+            }
         }
     }
 }

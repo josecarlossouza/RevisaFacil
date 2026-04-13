@@ -4,6 +4,8 @@
              xmlns:helpers="clr-namespace:RevisaFacil.Helpers"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+
+        <!-- ── Estilos ──────────────────────────────────────────────────────── -->
         <Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -19,6 +21,12 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <helpers:StatusToColorConverter x:Key="StatusToColorConverter"/>
+
+        <!-- ── Converters — TODOS devem estar aqui para o CalendarioPage encontrar ── -->
+        <helpers:StatusToColorConverter       x:Key="StatusToColorConverter"/>
+        <helpers:DataTemNotaParaCorConverter  x:Key="DataTemNotaParaCorConverter"/>
+        <helpers:DiaParaThicknessConverter    x:Key="DiaParaThicknessConverter"/>
+        <helpers:DiaParaCorBordaConverter     x:Key="DiaParaCorBordaConverter"/>
+
     </Application.Resources>
 </Application>

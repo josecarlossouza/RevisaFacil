@@ -1,4 +1,11 @@
-﻿using System;
+﻿// MainView.xaml.cs
+// CORREÇÕES:
+//   1. txtLabelConcluidos atualizado dinamicamente com a qtdRev lida do banco
+//   2. Cálculo de "Concluídos", "Revisões Hoje", "Atrasadas" e "Concluídas Hoje"
+//      agora usa qtdRev em vez de 5 fixo
+//   3. Tabela de estatísticas por disciplina também usa qtdRev
+
+using System;
 using System.Linq;
 using System.Windows.Controls;
 using System.Collections.Generic;
@@ -64,41 +71,58 @@ namespace RevisaFacil.Views
             {
                 using (var db = new EstudoDbContext(TemaManager.GetDbPath()))
                 {
+                    // ── Quantidade de revisões configurada pelo usuário ────────────
+                    // ✅ CORREÇÃO PRINCIPAL: lê qtdRev com fallback seguro caso a coluna
+                    //    ainda não exista no banco (evita crash durante a migração).
+                    int qtdRev = TemaManager.GetQuantidadeRevisoes();
+
                     var todosAssuntos = db.Assuntos.ToList();
                     var hoje = DateTime.Today;
 
                     // ── Cards de resumo geral ──────────────────────────────────────
                     int total = todosAssuntos.Count;
+
+                    // Um assunto é considerado "concluído" quando TODAS as qtdRev revisões
+                    // estão marcadas como concluídas.
                     int concluidos = todosAssuntos.Count(a =>
-                        a.Rev1Concluida && a.Rev2Concluida && a.Rev3Concluida &&
-                        a.Rev4Concluida && a.Rev5Concluida);
+                    {
+                        for (int i = 1; i <= qtdRev; i++)
+                            if (!a.GetRevConcluida(i)) return false;
+                        return true;
+                    });
                     int pendentes = total - concluidos;
 
                     txtTotalAssuntos.Text = total.ToString();
                     txtConcluidos.Text = concluidos.ToString();
                     txtPendentes.Text = pendentes.ToString();
 
+                    // ✅ LABEL DINÂMICO: acompanha a quantidade de revisões do usuário
+                    txtLabelConcluidos.Text = $"Concluídos ({qtdRev} Revs)";
+
                     // ── Card de resumo do dia ──────────────────────────────────────
                     int revisoesHoje = todosAssuntos.Sum(a =>
-                        (a.DataRev1.Date == hoje && !a.Rev1Concluida ? 1 : 0) +
-                        (a.DataRev2.Date == hoje && !a.Rev2Concluida ? 1 : 0) +
-                        (a.DataRev3.Date == hoje && !a.Rev3Concluida ? 1 : 0) +
-                        (a.DataRev4.Date == hoje && !a.Rev4Concluida ? 1 : 0) +
-                        (a.DataRev5.Date == hoje && !a.Rev5Concluida ? 1 : 0));
+                    {
+                        int count = 0;
+                        for (int i = 1; i <= qtdRev; i++)
+                            if (a.GetDataRev(i).Date == hoje && !a.GetRevConcluida(i)) count++;
+                        return count;
+                    });
 
                     int atrasadas = todosAssuntos.Sum(a =>
-                        (a.DataRev1.Date < hoje && !a.Rev1Concluida ? 1 : 0) +
-                        (a.DataRev2.Date < hoje && !a.Rev2Concluida ? 1 : 0) +
-                        (a.DataRev3.Date < hoje && !a.Rev3Concluida ? 1 : 0) +
-                        (a.DataRev4.Date < hoje && !a.Rev4Concluida ? 1 : 0) +
-                        (a.DataRev5.Date < hoje && !a.Rev5Concluida ? 1 : 0));
+                    {
+                        int count = 0;
+                        for (int i = 1; i <= qtdRev; i++)
+                            if (a.GetDataRev(i).Date < hoje && !a.GetRevConcluida(i)) count++;
+                        return count;
+                    });
 
                     int concluidasHoje = todosAssuntos.Sum(a =>
-                        (a.DataRev1.Date == hoje && a.Rev1Concluida ? 1 : 0) +
-                        (a.DataRev2.Date == hoje && a.Rev2Concluida ? 1 : 0) +
-                        (a.DataRev3.Date == hoje && a.Rev3Concluida ? 1 : 0) +
-                        (a.DataRev4.Date == hoje && a.Rev4Concluida ? 1 : 0) +
-                        (a.DataRev5.Date == hoje && a.Rev5Concluida ? 1 : 0));
+                    {
+                        int count = 0;
+                        for (int i = 1; i <= qtdRev; i++)
+                            if (a.GetDataRev(i).Date == hoje && a.GetRevConcluida(i)) count++;
+                        return count;
+                    });
 
                     txtRevisoesHoje.Text = revisoesHoje.ToString();
                     txtRevisoesAtrasadas.Text = atrasadas.ToString();
@@ -132,14 +156,15 @@ namespace RevisaFacil.Views
                     {
                         var assuntos = grupo.ToList();
                         int totalAssuntos = assuntos.Count;
-                        int totalRevisoesPossiveis = totalAssuntos * 5;
+                        int totalRevisoesPossiveis = totalAssuntos * qtdRev;
 
-                        int revisoesConcluidasTotal =
-                            assuntos.Count(a => a.Rev1Concluida) +
-                            assuntos.Count(a => a.Rev2Concluida) +
-                            assuntos.Count(a => a.Rev3Concluida) +
-                            assuntos.Count(a => a.Rev4Concluida) +
-                            assuntos.Count(a => a.Rev5Concluida);
+                        int revisoesConcluidasTotal = assuntos.Sum(a =>
+                        {
+                            int c = 0;
+                            for (int i = 1; i <= qtdRev; i++)
+                                if (a.GetRevConcluida(i)) c++;
+                            return c;
+                        });
 
                         double taxa = totalRevisoesPossiveis > 0
                             ? (revisoesConcluidasTotal * 100.0) / totalRevisoesPossiveis
@@ -148,11 +173,11 @@ namespace RevisaFacil.Views
                         var diasDeAtraso = new List<double>();
                         foreach (var a in assuntos)
                         {
-                            if (a.DataRev1.Date < hoje && !a.Rev1Concluida) diasDeAtraso.Add((hoje - a.DataRev1.Date).TotalDays);
-                            if (a.DataRev2.Date < hoje && !a.Rev2Concluida) diasDeAtraso.Add((hoje - a.DataRev2.Date).TotalDays);
-                            if (a.DataRev3.Date < hoje && !a.Rev3Concluida) diasDeAtraso.Add((hoje - a.DataRev3.Date).TotalDays);
-                            if (a.DataRev4.Date < hoje && !a.Rev4Concluida) diasDeAtraso.Add((hoje - a.DataRev4.Date).TotalDays);
-                            if (a.DataRev5.Date < hoje && !a.Rev5Concluida) diasDeAtraso.Add((hoje - a.DataRev5.Date).TotalDays);
+                            for (int i = 1; i <= qtdRev; i++)
+                            {
+                                if (a.GetDataRev(i).Date < hoje && !a.GetRevConcluida(i))
+                                    diasDeAtraso.Add((hoje - a.GetDataRev(i).Date).TotalDays);
+                            }
                         }
 
                         double atrasoMedio = diasDeAtraso.Count > 0 ? diasDeAtraso.Average() : 0;

@@ -32,7 +32,8 @@
                         <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
                     </Border.Effect>
                     <StackPanel>
-                        <TextBlock Text="Concluídos (5 Revs)" HorizontalAlignment="Center" Foreground="#7F8C8D" FontSize="12"/>
+                        <!-- ✅ CORRIGIDO: x:Name adicionado para ser atualizado dinamicamente no code-behind -->
+                        <TextBlock x:Name="txtLabelConcluidos" Text="Concluídos (10 Revs)" HorizontalAlignment="Center" Foreground="#7F8C8D" FontSize="12"/>
                         <TextBlock x:Name="txtConcluidos" Text="0" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Foreground="#27AE60"/>
                     </StackPanel>
                 </Border>

@@ -1,4 +1,7 @@
-﻿using System;
+﻿// DataTemNotaParaCorConverter.cs  (Helpers)
+// CORRIGIDO: removido padrão "is DateTime?" que é ilegal no C# — substituído por cast explícito.
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Data;
@@ -10,22 +13,48 @@ namespace RevisaFacil.Helpers
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            // values[0] é a data do card atual
-            // values[1] é a lista de datas que possuem notas carregadas do banco
-            if (values[0] is DateTime data && values[1] is HashSet<DateTime> datasComNotas)
+            // values[0] pode ser DateTime, DateTime? (boxed como object) ou DiaCalendarioItem
+            // values[1] é HashSet<DateTime> com as datas que têm notas
+            DateTime? data = ExtrairData(values[0]);
+
+            if (data.HasValue && values[1] is HashSet<DateTime> datasComNotas)
             {
-                if (datasComNotas.Contains(data.Date))
-                {
-                    // Cor de fundo se tiver anotação (ex: um azul bem clarinho ou amarelo suave)
-                    return (Brush)new BrushConverter().ConvertFromString("#EBF5FB");
-                }
+                if (datasComNotas.Contains(data.Value.Date))
+                    return (Brush)new BrushConverter().ConvertFromString("#EBF5FB"); // azul clarinho
             }
-            return Brushes.White; // Fundo padrão se não tiver nota
+
+            return Brushes.White;
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+
+        private static DateTime? ExtrairData(object value)
         {
-            throw new NotImplementedException();
+            if (value is DateTime dt)
+                return dt;
+
+            // DateTime? é boxado como object; tenta cast direto
+            if (value is DateTime dtCast)
+                return dtCast;
+
+            // Tenta via Nullable<DateTime> unboxing seguro
+            if (value != null && value.GetType() == typeof(DateTime?))
+                return (DateTime?)value;
+
+            // Suporte ao DiaCalendarioItem via reflexão
+            if (value != null)
+            {
+                var prop = value.GetType().GetProperty("Data");
+                if (prop != null)
+                {
+                    var val = prop.GetValue(value);
+                    if (val is DateTime dtProp) return dtProp;
+                    if (val != null && val.GetType() == typeof(DateTime?)) return (DateTime?)val;
+                }
+            }
+
+            return null;
         }
     }
 }

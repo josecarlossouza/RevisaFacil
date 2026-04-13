@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// EstudoDbContext.cs
+using Microsoft.EntityFrameworkCore;
 using RevisaFacil.Models;
 using RevisaFacil.Helpers;
 
@@ -22,9 +23,7 @@ namespace RevisaFacil.Data
 
         public DbSet<Assunto> Assuntos { get; set; }
         public DbSet<Disciplina> Disciplinas { get; set; }
-
         public DbSet<Configuracao> Configuracoes { get; set; }
-
         public DbSet<NotaCalendario> NotasCalendario { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
