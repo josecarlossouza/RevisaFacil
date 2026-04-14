@@ -1,4 +1,9 @@
 ﻿// Configuracao.cs
+// MODIFICAÇÃO: Adicionado campo UltimaDisciplinaId para lembrar qual disciplina
+// o usuário visualizou por último em "Meus Assuntos".
+// Os intervalos globais continuam existindo como fallback quando uma disciplina
+// não tiver configuração própria.
+
 namespace RevisaFacil.Models
 {
     public class Configuracao
@@ -8,36 +13,41 @@ namespace RevisaFacil.Models
         // Quantidade de revisões ativas (1 a 30), padrão 10
         public int QuantidadeRevisoes { get; set; } = 10;
 
+        // Última disciplina visualizada em "Meus Assuntos" (0 = nenhuma)
+        public int UltimaDisciplinaId { get; set; } = 0;
+
+        // ── Intervalos globais (fallback quando a disciplina não tem configuração própria) ──
+        // Int1 = dias após DataInicio. Int2+ = dias após a revisão anterior.
         public int Intervalo1 { get; set; } = 30;
-        public int Intervalo2 { get; set; } = 60;
-        public int Intervalo3 { get; set; } = 90;
-        public int Intervalo4 { get; set; } = 120;
-        public int Intervalo5 { get; set; } = 150;
-        public int Intervalo6 { get; set; } = 180;
-        public int Intervalo7 { get; set; } = 210;
-        public int Intervalo8 { get; set; } = 240;
-        public int Intervalo9 { get; set; } = 270;
-        public int Intervalo10 { get; set; } = 300;
-        public int Intervalo11 { get; set; } = 330;
-        public int Intervalo12 { get; set; } = 360;
-        public int Intervalo13 { get; set; } = 390;
-        public int Intervalo14 { get; set; } = 420;
-        public int Intervalo15 { get; set; } = 450;
-        public int Intervalo16 { get; set; } = 480;
-        public int Intervalo17 { get; set; } = 510;
-        public int Intervalo18 { get; set; } = 540;
-        public int Intervalo19 { get; set; } = 570;
-        public int Intervalo20 { get; set; } = 600;
-        public int Intervalo21 { get; set; } = 630;
-        public int Intervalo22 { get; set; } = 660;
-        public int Intervalo23 { get; set; } = 690;
-        public int Intervalo24 { get; set; } = 720;
-        public int Intervalo25 { get; set; } = 750;
-        public int Intervalo26 { get; set; } = 780;
-        public int Intervalo27 { get; set; } = 810;
-        public int Intervalo28 { get; set; } = 840;
-        public int Intervalo29 { get; set; } = 870;
-        public int Intervalo30 { get; set; } = 900;
+        public int Intervalo2 { get; set; } = 30;
+        public int Intervalo3 { get; set; } = 30;
+        public int Intervalo4 { get; set; } = 30;
+        public int Intervalo5 { get; set; } = 30;
+        public int Intervalo6 { get; set; } = 30;
+        public int Intervalo7 { get; set; } = 30;
+        public int Intervalo8 { get; set; } = 30;
+        public int Intervalo9 { get; set; } = 30;
+        public int Intervalo10 { get; set; } = 30;
+        public int Intervalo11 { get; set; } = 30;
+        public int Intervalo12 { get; set; } = 30;
+        public int Intervalo13 { get; set; } = 30;
+        public int Intervalo14 { get; set; } = 30;
+        public int Intervalo15 { get; set; } = 30;
+        public int Intervalo16 { get; set; } = 30;
+        public int Intervalo17 { get; set; } = 30;
+        public int Intervalo18 { get; set; } = 30;
+        public int Intervalo19 { get; set; } = 30;
+        public int Intervalo20 { get; set; } = 30;
+        public int Intervalo21 { get; set; } = 30;
+        public int Intervalo22 { get; set; } = 30;
+        public int Intervalo23 { get; set; } = 30;
+        public int Intervalo24 { get; set; } = 30;
+        public int Intervalo25 { get; set; } = 30;
+        public int Intervalo26 { get; set; } = 30;
+        public int Intervalo27 { get; set; } = 30;
+        public int Intervalo28 { get; set; } = 30;
+        public int Intervalo29 { get; set; } = 30;
+        public int Intervalo30 { get; set; } = 30;
 
         public int GetIntervalo(int n) => n switch
         {

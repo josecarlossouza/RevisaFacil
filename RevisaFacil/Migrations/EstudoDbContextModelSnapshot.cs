@@ -326,6 +326,9 @@ namespace RevisaFacil.Migrations
                     b.Property<int>("QuantidadeRevisoes")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("UltimaDisciplinaId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.ToTable("Configuracoes");
@@ -337,9 +340,102 @@ namespace RevisaFacil.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("Intervalo1")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo10")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo11")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo12")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo13")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo14")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo15")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo16")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo17")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo18")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo19")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo2")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo20")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo21")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo22")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo23")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo24")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo25")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo26")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo27")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo28")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo29")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo3")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo30")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo4")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo5")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo6")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo7")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo8")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Intervalo9")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("QuantidadeRevisoes")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

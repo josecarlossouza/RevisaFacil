@@ -1,4 +1,11 @@
 ﻿// Assunto.cs
+// MODIFICAÇÃO: Datas de revisão agora são encadeadas.
+// Rev1 = DataInicio + Int1
+// Rev2 = DataRev1  + Int2
+// Rev3 = DataRev2  + Int3  ... e assim por diante.
+// Isso significa que Int2 em diante representa "dias após a revisão anterior",
+// e não mais "dias após o início".
+
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -21,71 +28,74 @@ namespace RevisaFacil.Models
             set { _dataInicio = value; OnPropertyChanged(); NotificarDatas(); }
         }
 
-        // Intervalos em dias (padrão: 30, 60, 90, ..., 300)
-        private int _int1 = 30; public int Int1 { get => _int1; set { _int1 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev1)); } }
-        private int _int2 = 60; public int Int2 { get => _int2; set { _int2 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev2)); } }
-        private int _int3 = 90; public int Int3 { get => _int3; set { _int3 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev3)); } }
-        private int _int4 = 120; public int Int4 { get => _int4; set { _int4 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev4)); } }
-        private int _int5 = 150; public int Int5 { get => _int5; set { _int5 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev5)); } }
-        private int _int6 = 180; public int Int6 { get => _int6; set { _int6 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev6)); } }
-        private int _int7 = 210; public int Int7 { get => _int7; set { _int7 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev7)); } }
-        private int _int8 = 240; public int Int8 { get => _int8; set { _int8 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev8)); } }
-        private int _int9 = 270; public int Int9 { get => _int9; set { _int9 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev9)); } }
-        private int _int10 = 300; public int Int10 { get => _int10; set { _int10 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev10)); } }
-        private int _int11 = 330; public int Int11 { get => _int11; set { _int11 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev11)); } }
-        private int _int12 = 360; public int Int12 { get => _int12; set { _int12 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev12)); } }
-        private int _int13 = 390; public int Int13 { get => _int13; set { _int13 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev13)); } }
-        private int _int14 = 420; public int Int14 { get => _int14; set { _int14 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev14)); } }
-        private int _int15 = 450; public int Int15 { get => _int15; set { _int15 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev15)); } }
-        private int _int16 = 480; public int Int16 { get => _int16; set { _int16 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev16)); } }
-        private int _int17 = 510; public int Int17 { get => _int17; set { _int17 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev17)); } }
-        private int _int18 = 540; public int Int18 { get => _int18; set { _int18 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev18)); } }
-        private int _int19 = 570; public int Int19 { get => _int19; set { _int19 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev19)); } }
-        private int _int20 = 600; public int Int20 { get => _int20; set { _int20 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev20)); } }
-        private int _int21 = 630; public int Int21 { get => _int21; set { _int21 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev21)); } }
-        private int _int22 = 660; public int Int22 { get => _int22; set { _int22 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev22)); } }
-        private int _int23 = 690; public int Int23 { get => _int23; set { _int23 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev23)); } }
-        private int _int24 = 720; public int Int24 { get => _int24; set { _int24 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev24)); } }
-        private int _int25 = 750; public int Int25 { get => _int25; set { _int25 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev25)); } }
-        private int _int26 = 780; public int Int26 { get => _int26; set { _int26 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev26)); } }
-        private int _int27 = 810; public int Int27 { get => _int27; set { _int27 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev27)); } }
-        private int _int28 = 840; public int Int28 { get => _int28; set { _int28 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev28)); } }
-        private int _int29 = 870; public int Int29 { get => _int29; set { _int29 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev29)); } }
-        private int _int30 = 900; public int Int30 { get => _int30; set { _int30 = value; OnPropertyChanged(); OnPropertyChanged(nameof(DataRev30)); } }
+        // ── Intervalos em dias ────────────────────────────────────────────────────
+        // Int1 = dias após DataInicio
+        // Int2..30 = dias após a revisão ANTERIOR
+        private int _int1 = 30; public int Int1 { get => _int1; set { _int1 = value; OnPropertyChanged(); NotificarDatasAPartirDe(1); } }
+        private int _int2 = 30; public int Int2 { get => _int2; set { _int2 = value; OnPropertyChanged(); NotificarDatasAPartirDe(2); } }
+        private int _int3 = 30; public int Int3 { get => _int3; set { _int3 = value; OnPropertyChanged(); NotificarDatasAPartirDe(3); } }
+        private int _int4 = 30; public int Int4 { get => _int4; set { _int4 = value; OnPropertyChanged(); NotificarDatasAPartirDe(4); } }
+        private int _int5 = 30; public int Int5 { get => _int5; set { _int5 = value; OnPropertyChanged(); NotificarDatasAPartirDe(5); } }
+        private int _int6 = 30; public int Int6 { get => _int6; set { _int6 = value; OnPropertyChanged(); NotificarDatasAPartirDe(6); } }
+        private int _int7 = 30; public int Int7 { get => _int7; set { _int7 = value; OnPropertyChanged(); NotificarDatasAPartirDe(7); } }
+        private int _int8 = 30; public int Int8 { get => _int8; set { _int8 = value; OnPropertyChanged(); NotificarDatasAPartirDe(8); } }
+        private int _int9 = 30; public int Int9 { get => _int9; set { _int9 = value; OnPropertyChanged(); NotificarDatasAPartirDe(9); } }
+        private int _int10 = 30; public int Int10 { get => _int10; set { _int10 = value; OnPropertyChanged(); NotificarDatasAPartirDe(10); } }
+        private int _int11 = 30; public int Int11 { get => _int11; set { _int11 = value; OnPropertyChanged(); NotificarDatasAPartirDe(11); } }
+        private int _int12 = 30; public int Int12 { get => _int12; set { _int12 = value; OnPropertyChanged(); NotificarDatasAPartirDe(12); } }
+        private int _int13 = 30; public int Int13 { get => _int13; set { _int13 = value; OnPropertyChanged(); NotificarDatasAPartirDe(13); } }
+        private int _int14 = 30; public int Int14 { get => _int14; set { _int14 = value; OnPropertyChanged(); NotificarDatasAPartirDe(14); } }
+        private int _int15 = 30; public int Int15 { get => _int15; set { _int15 = value; OnPropertyChanged(); NotificarDatasAPartirDe(15); } }
+        private int _int16 = 30; public int Int16 { get => _int16; set { _int16 = value; OnPropertyChanged(); NotificarDatasAPartirDe(16); } }
+        private int _int17 = 30; public int Int17 { get => _int17; set { _int17 = value; OnPropertyChanged(); NotificarDatasAPartirDe(17); } }
+        private int _int18 = 30; public int Int18 { get => _int18; set { _int18 = value; OnPropertyChanged(); NotificarDatasAPartirDe(18); } }
+        private int _int19 = 30; public int Int19 { get => _int19; set { _int19 = value; OnPropertyChanged(); NotificarDatasAPartirDe(19); } }
+        private int _int20 = 30; public int Int20 { get => _int20; set { _int20 = value; OnPropertyChanged(); NotificarDatasAPartirDe(20); } }
+        private int _int21 = 30; public int Int21 { get => _int21; set { _int21 = value; OnPropertyChanged(); NotificarDatasAPartirDe(21); } }
+        private int _int22 = 30; public int Int22 { get => _int22; set { _int22 = value; OnPropertyChanged(); NotificarDatasAPartirDe(22); } }
+        private int _int23 = 30; public int Int23 { get => _int23; set { _int23 = value; OnPropertyChanged(); NotificarDatasAPartirDe(23); } }
+        private int _int24 = 30; public int Int24 { get => _int24; set { _int24 = value; OnPropertyChanged(); NotificarDatasAPartirDe(24); } }
+        private int _int25 = 30; public int Int25 { get => _int25; set { _int25 = value; OnPropertyChanged(); NotificarDatasAPartirDe(25); } }
+        private int _int26 = 30; public int Int26 { get => _int26; set { _int26 = value; OnPropertyChanged(); NotificarDatasAPartirDe(26); } }
+        private int _int27 = 30; public int Int27 { get => _int27; set { _int27 = value; OnPropertyChanged(); NotificarDatasAPartirDe(27); } }
+        private int _int28 = 30; public int Int28 { get => _int28; set { _int28 = value; OnPropertyChanged(); NotificarDatasAPartirDe(28); } }
+        private int _int29 = 30; public int Int29 { get => _int29; set { _int29 = value; OnPropertyChanged(); NotificarDatasAPartirDe(29); } }
+        private int _int30 = 30; public int Int30 { get => _int30; set { _int30 = value; OnPropertyChanged(); NotificarDatasAPartirDe(30); } }
 
-        // Datas calculadas — [NotMapped] é válido aqui pois são propriedades
+        // ── Datas calculadas ENCADEADAS ───────────────────────────────────────────
+        // Rev1 conta a partir do Início. Rev2+ conta a partir da revisão anterior.
         [NotMapped] public DateTime DataRev1 => DataInicio.AddDays(Int1);
-        [NotMapped] public DateTime DataRev2 => DataInicio.AddDays(Int2);
-        [NotMapped] public DateTime DataRev3 => DataInicio.AddDays(Int3);
-        [NotMapped] public DateTime DataRev4 => DataInicio.AddDays(Int4);
-        [NotMapped] public DateTime DataRev5 => DataInicio.AddDays(Int5);
-        [NotMapped] public DateTime DataRev6 => DataInicio.AddDays(Int6);
-        [NotMapped] public DateTime DataRev7 => DataInicio.AddDays(Int7);
-        [NotMapped] public DateTime DataRev8 => DataInicio.AddDays(Int8);
-        [NotMapped] public DateTime DataRev9 => DataInicio.AddDays(Int9);
-        [NotMapped] public DateTime DataRev10 => DataInicio.AddDays(Int10);
-        [NotMapped] public DateTime DataRev11 => DataInicio.AddDays(Int11);
-        [NotMapped] public DateTime DataRev12 => DataInicio.AddDays(Int12);
-        [NotMapped] public DateTime DataRev13 => DataInicio.AddDays(Int13);
-        [NotMapped] public DateTime DataRev14 => DataInicio.AddDays(Int14);
-        [NotMapped] public DateTime DataRev15 => DataInicio.AddDays(Int15);
-        [NotMapped] public DateTime DataRev16 => DataInicio.AddDays(Int16);
-        [NotMapped] public DateTime DataRev17 => DataInicio.AddDays(Int17);
-        [NotMapped] public DateTime DataRev18 => DataInicio.AddDays(Int18);
-        [NotMapped] public DateTime DataRev19 => DataInicio.AddDays(Int19);
-        [NotMapped] public DateTime DataRev20 => DataInicio.AddDays(Int20);
-        [NotMapped] public DateTime DataRev21 => DataInicio.AddDays(Int21);
-        [NotMapped] public DateTime DataRev22 => DataInicio.AddDays(Int22);
-        [NotMapped] public DateTime DataRev23 => DataInicio.AddDays(Int23);
-        [NotMapped] public DateTime DataRev24 => DataInicio.AddDays(Int24);
-        [NotMapped] public DateTime DataRev25 => DataInicio.AddDays(Int25);
-        [NotMapped] public DateTime DataRev26 => DataInicio.AddDays(Int26);
-        [NotMapped] public DateTime DataRev27 => DataInicio.AddDays(Int27);
-        [NotMapped] public DateTime DataRev28 => DataInicio.AddDays(Int28);
-        [NotMapped] public DateTime DataRev29 => DataInicio.AddDays(Int29);
-        [NotMapped] public DateTime DataRev30 => DataInicio.AddDays(Int30);
+        [NotMapped] public DateTime DataRev2 => DataRev1.AddDays(Int2);
+        [NotMapped] public DateTime DataRev3 => DataRev2.AddDays(Int3);
+        [NotMapped] public DateTime DataRev4 => DataRev3.AddDays(Int4);
+        [NotMapped] public DateTime DataRev5 => DataRev4.AddDays(Int5);
+        [NotMapped] public DateTime DataRev6 => DataRev5.AddDays(Int6);
+        [NotMapped] public DateTime DataRev7 => DataRev6.AddDays(Int7);
+        [NotMapped] public DateTime DataRev8 => DataRev7.AddDays(Int8);
+        [NotMapped] public DateTime DataRev9 => DataRev8.AddDays(Int9);
+        [NotMapped] public DateTime DataRev10 => DataRev9.AddDays(Int10);
+        [NotMapped] public DateTime DataRev11 => DataRev10.AddDays(Int11);
+        [NotMapped] public DateTime DataRev12 => DataRev11.AddDays(Int12);
+        [NotMapped] public DateTime DataRev13 => DataRev12.AddDays(Int13);
+        [NotMapped] public DateTime DataRev14 => DataRev13.AddDays(Int14);
+        [NotMapped] public DateTime DataRev15 => DataRev14.AddDays(Int15);
+        [NotMapped] public DateTime DataRev16 => DataRev15.AddDays(Int16);
+        [NotMapped] public DateTime DataRev17 => DataRev16.AddDays(Int17);
+        [NotMapped] public DateTime DataRev18 => DataRev17.AddDays(Int18);
+        [NotMapped] public DateTime DataRev19 => DataRev18.AddDays(Int19);
+        [NotMapped] public DateTime DataRev20 => DataRev19.AddDays(Int20);
+        [NotMapped] public DateTime DataRev21 => DataRev20.AddDays(Int21);
+        [NotMapped] public DateTime DataRev22 => DataRev21.AddDays(Int22);
+        [NotMapped] public DateTime DataRev23 => DataRev22.AddDays(Int23);
+        [NotMapped] public DateTime DataRev24 => DataRev23.AddDays(Int24);
+        [NotMapped] public DateTime DataRev25 => DataRev24.AddDays(Int25);
+        [NotMapped] public DateTime DataRev26 => DataRev25.AddDays(Int26);
+        [NotMapped] public DateTime DataRev27 => DataRev26.AddDays(Int27);
+        [NotMapped] public DateTime DataRev28 => DataRev27.AddDays(Int28);
+        [NotMapped] public DateTime DataRev29 => DataRev28.AddDays(Int29);
+        [NotMapped] public DateTime DataRev30 => DataRev29.AddDays(Int30);
 
-        // Status de conclusão
+        // ── Status de conclusão ───────────────────────────────────────────────────
         public bool Rev1Concluida { get; set; }
         public bool Rev2Concluida { get; set; }
         public bool Rev3Concluida { get; set; }
@@ -117,7 +127,7 @@ namespace RevisaFacil.Models
         public bool Rev29Concluida { get; set; }
         public bool Rev30Concluida { get; set; }
 
-        // ── Acesso dinâmico por índice (métodos normais, sem [NotMapped]) ─────────
+        // ── Acesso dinâmico por índice ────────────────────────────────────────────
 
         public DateTime GetDataRev(int n) => n switch
         {
@@ -304,10 +314,16 @@ namespace RevisaFacil.Models
         protected void OnPropertyChanged([CallerMemberName] string name = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        private void NotificarDatas()
+        /// <summary>
+        /// Notifica TODAS as revisões a partir do índice N (encadeamento em cascata).
+        /// Quando Int3 muda, Rev3 muda, e como Rev4 depende de Rev3, Rev4 também muda, etc.
+        /// </summary>
+        private void NotificarDatasAPartirDe(int n)
         {
-            for (int i = 1; i <= 30; i++)
+            for (int i = n; i <= 30; i++)
                 OnPropertyChanged($"DataRev{i}");
         }
+
+        private void NotificarDatas() => NotificarDatasAPartirDe(1);
     }
 }

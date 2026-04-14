@@ -1,4 +1,12 @@
-﻿// TemaManager.cs (Helpers)
+﻿// TemaManager.cs
+// MODIFICAÇÕES:
+// 1. MigrarConfiguracoes() agora também cria a coluna UltimaDisciplinaId em Configuracoes.
+// 2. MigrarConfiguracoesDisciplinas() — novo método que cria as colunas de
+//    QuantidadeRevisoes e Intervalo1..30 na tabela Disciplinas (via ALTER TABLE).
+// 3. SincronizarCalendarioGlobal() permanece igual.
+// 4. GetIntervaloEfetivo() — helper que retorna o intervalo de uma disciplina
+//    (próprio ou fallback global), usado por AssuntosPage ao aplicar intervalos.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,41 +22,45 @@ namespace RevisaFacil.Helpers
 {
     public static class TemaManager
     {
+        // ── Tema atual ────────────────────────────────────────────────────────────
+
         public static string TemaAtual { get; set; } = "Padrao";
+
+        public static string GetDbPath()
+        {
+            string pasta = AppDomain.CurrentDomain.BaseDirectory;
+            return Path.Combine(pasta, $"{TemaAtual}.db");
+        }
 
         public static List<string> ListarTemas()
         {
-            var pasta = AppDomain.CurrentDomain.BaseDirectory;
-            var arquivos = Directory.GetFiles(pasta, "*.db");
-            return arquivos.Select(Path.GetFileNameWithoutExtension).ToList();
+            string pasta = AppDomain.CurrentDomain.BaseDirectory;
+            return Directory.GetFiles(pasta, "*.db")
+                .Select(f => Path.GetFileNameWithoutExtension(f))
+                .Where(n => n != "Padrao" || true)   // inclui Padrao na lista
+                .OrderBy(n => n)
+                .ToList();
         }
 
-        public static string GetDbPath() =>
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{TemaAtual}.db");
-
-        public static void DeletarBanco(string nomeTema)
+        public static void DeletarBanco(string tema)
         {
-            string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{nomeTema}.db");
-
-            if (File.Exists(dbPath))
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{tema}.db");
+            if (File.Exists(path))
             {
-                // Libera o pool de conexões do SQLite para evitar o erro de "processo em uso"
                 SqliteConnection.ClearAllPools();
-
-                // Força o Garbage Collector a liberar handles de arquivos
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-
-                try { File.Delete(dbPath); }
-                catch (IOException)
-                {
-                    // Se ainda assim falhar, tenta novamente após um breve delay
-                    System.Threading.Thread.Sleep(100);
-                    File.Delete(dbPath);
-                }
+                File.Delete(path);
             }
         }
 
+        // ── Migrações de schema ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Garante que a tabela Configuracoes tenha todas as colunas necessárias,
+        /// incluindo as novas: UltimaDisciplinaId e os Intervalo1..30 ajustados para
+        /// padrão 30 (lógica encadeada).
+        /// </summary>
         public static void MigrarConfiguracoes()
         {
             try
@@ -70,19 +82,22 @@ namespace RevisaFacil.Helpers
 
                 if (colunasExistentes.Count == 0) return;
 
+                // Mapa: nome da coluna → valor padrão SQL
                 var colunasEsperadas = new Dictionary<string, string>
                 {
                     { "QuantidadeRevisoes", "10" },
-                    { "Intervalo1",  "30"  }, { "Intervalo2",  "60"  }, { "Intervalo3",  "90"  },
-                    { "Intervalo4",  "120" }, { "Intervalo5",  "150" }, { "Intervalo6",  "180" },
-                    { "Intervalo7",  "210" }, { "Intervalo8",  "240" }, { "Intervalo9",  "270" },
-                    { "Intervalo10", "300" }, { "Intervalo11", "330" }, { "Intervalo12", "360" },
-                    { "Intervalo13", "390" }, { "Intervalo14", "420" }, { "Intervalo15", "450" },
-                    { "Intervalo16", "480" }, { "Intervalo17", "510" }, { "Intervalo18", "540" },
-                    { "Intervalo19", "570" }, { "Intervalo20", "600" }, { "Intervalo21", "630" },
-                    { "Intervalo22", "660" }, { "Intervalo23", "690" }, { "Intervalo24", "720" },
-                    { "Intervalo25", "750" }, { "Intervalo26", "780" }, { "Intervalo27", "810" },
-                    { "Intervalo28", "840" }, { "Intervalo29", "870" }, { "Intervalo30", "900" },
+                    { "UltimaDisciplinaId", "0"  },
+                    // Intervalos padrão 30 dias (lógica encadeada: cada revisão é 30d após a anterior)
+                    { "Intervalo1",  "30" }, { "Intervalo2",  "30" }, { "Intervalo3",  "30" },
+                    { "Intervalo4",  "30" }, { "Intervalo5",  "30" }, { "Intervalo6",  "30" },
+                    { "Intervalo7",  "30" }, { "Intervalo8",  "30" }, { "Intervalo9",  "30" },
+                    { "Intervalo10", "30" }, { "Intervalo11", "30" }, { "Intervalo12", "30" },
+                    { "Intervalo13", "30" }, { "Intervalo14", "30" }, { "Intervalo15", "30" },
+                    { "Intervalo16", "30" }, { "Intervalo17", "30" }, { "Intervalo18", "30" },
+                    { "Intervalo19", "30" }, { "Intervalo20", "30" }, { "Intervalo21", "30" },
+                    { "Intervalo22", "30" }, { "Intervalo23", "30" }, { "Intervalo24", "30" },
+                    { "Intervalo25", "30" }, { "Intervalo26", "30" }, { "Intervalo27", "30" },
+                    { "Intervalo28", "30" }, { "Intervalo29", "30" }, { "Intervalo30", "30" },
                 };
 
                 foreach (var kv in colunasEsperadas)
@@ -101,6 +116,55 @@ namespace RevisaFacil.Helpers
             }
         }
 
+        /// <summary>
+        /// Garante que a tabela Disciplinas tenha as novas colunas de
+        /// QuantidadeRevisoes e Intervalo1..30 (todas nullable).
+        /// Deve ser chamado após MigrarConfiguracoes().
+        /// </summary>
+        public static void MigrarConfiguracoesDisciplinas()
+        {
+            try
+            {
+                string dbPath = GetDbPath();
+                if (!File.Exists(dbPath)) return;
+
+                using var conn = new SqliteConnection($"Data Source={dbPath}");
+                conn.Open();
+
+                var colunasExistentes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "PRAGMA table_info(Disciplinas)";
+                    using var reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                        colunasExistentes.Add(reader.GetString(1));
+                }
+
+                if (colunasExistentes.Count == 0) return;
+
+                // Todas nullable — ausência = usa global
+                var colunasDisciplina = new List<string> { "QuantidadeRevisoes" };
+                for (int i = 1; i <= 30; i++) colunasDisciplina.Add($"Intervalo{i}");
+
+                foreach (var col in colunasDisciplina)
+                {
+                    if (!colunasExistentes.Contains(col))
+                    {
+                        using var cmd = conn.CreateCommand();
+                        // NULL default = "não configurado, usa global"
+                        cmd.CommandText = $"ALTER TABLE Disciplinas ADD COLUMN \"{col}\" INTEGER NULL DEFAULT NULL";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Erro em MigrarConfiguracoesDisciplinas: " + ex.Message);
+            }
+        }
+
+        // ── Quantidade de revisões ────────────────────────────────────────────────
+
         public static int GetQuantidadeRevisoes()
         {
             try
@@ -113,34 +177,56 @@ namespace RevisaFacil.Helpers
             catch { return 10; }
         }
 
+        /// <summary>
+        /// Retorna a quantidade de revisões efetiva para uma disciplina:
+        /// usa o valor próprio da disciplina, ou cai para o global.
+        /// </summary>
+        public static int GetQuantidadeRevisoesDisciplina(Disciplina d, Configuracao config)
+            => d?.QuantidadeRevisoes ?? config?.QuantidadeRevisoes ?? 10;
+
+        /// <summary>
+        /// Retorna o intervalo efetivo para a revisão N de uma disciplina:
+        /// usa o valor próprio da disciplina, ou cai para o global.
+        /// </summary>
+        public static int GetIntervaloEfetivo(Disciplina d, Configuracao config, int n)
+            => d?.GetIntervalo(n) ?? config?.GetIntervalo(n) ?? 30;
+
+        // ── Sincronização do calendário ───────────────────────────────────────────
+
         public static void SincronizarCalendarioGlobal()
         {
             try
             {
                 using var db = new EstudoDbContext();
 
+                // Remove apenas as notas de revisão automática (preserva manuais)
                 var notasRevisao = db.NotasCalendario.Where(n => n.AssuntoId == -1).ToList();
                 db.NotasCalendario.RemoveRange(notasRevisao);
                 db.SaveChanges();
 
                 var config = db.Configuracoes.FirstOrDefault();
-                int qtdRevisoes = config?.QuantidadeRevisoes ?? 10;
+                int qtdRevisoesGlobal = config?.QuantidadeRevisoes ?? 10;
 
-                var todosAssuntos = db.Assuntos.Include(a => a.Disciplina).ToList();
+                var todasDisciplinas = db.Disciplinas.Include(d => d.Assuntos).ToList();
                 var agrupamento = new Dictionary<DateTime, List<string>>();
 
-                foreach (var assunto in todosAssuntos)
+                foreach (var disciplina in todasDisciplinas)
                 {
-                    string nomeDisc = assunto.Disciplina?.Nome ?? "Sem Disciplina";
-                    for (int i = 1; i <= qtdRevisoes; i++)
+                    int qtdRev = TemaManager.GetQuantidadeRevisoesDisciplina(disciplina, config);
+                    string nomeDisc = disciplina.Nome;
+
+                    foreach (var assunto in disciplina.Assuntos)
                     {
-                        DateTime dataRev = assunto.GetDataRev(i).Date;
-                        string texto = $"Estudar Disciplina: {nomeDisc.ToUpper()} - Assunto: {assunto.Titulo} - {i}ª Revisão";
+                        for (int i = 1; i <= qtdRev; i++)
+                        {
+                            DateTime dataRev = assunto.GetDataRev(i).Date;
+                            string texto = $"Estudar Disciplina: {nomeDisc.ToUpper()} - Assunto: {assunto.Titulo} - {i}ª Revisão";
 
-                        if (!agrupamento.ContainsKey(dataRev))
-                            agrupamento[dataRev] = new List<string>();
+                            if (!agrupamento.ContainsKey(dataRev))
+                                agrupamento[dataRev] = new List<string>();
 
-                        agrupamento[dataRev].Add(texto);
+                            agrupamento[dataRev].Add(texto);
+                        }
                     }
                 }
 
@@ -155,24 +241,26 @@ namespace RevisaFacil.Helpers
                 }
                 db.SaveChanges();
             }
-            catch (Exception ex) { System.Diagnostics.Debug.WriteLine("Erro na Sincronização: " + ex.Message); }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Erro na Sincronização: " + ex.Message);
+            }
         }
+
+        // ── Seed ─────────────────────────────────────────────────────────────────
 
         public static void SeedDatabase(EstudoDbContext db)
         {
             try
             {
-                // 1. Bloqueio de segurança para o banco padrão
                 if (TemaAtual == "Padrao")
                 {
                     System.Diagnostics.Debug.WriteLine("Seed ignorado: O tema 'Padrao' deve permanecer vazio.");
                     return;
                 }
 
-                // Garante a criação do arquivo físico .db
                 db.Database.EnsureCreated();
 
-                // 2. Se já houver dados, não faz nada para não duplicar
                 if (db.Disciplinas.Any()) return;
 
                 string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "seed.json");
@@ -182,8 +270,6 @@ namespace RevisaFacil.Helpers
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var root = JsonSerializer.Deserialize<SeedRoot>(jsonString, options);
 
-                // 3. Validação por Nome do Tema
-                // Só executa o seed se o nome do arquivo .db criado for igual ao "NomeTema" do JSON
                 if (root?.NomeTema != null && root.NomeTema.Trim().Equals(TemaAtual.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
                     System.Diagnostics.Debug.WriteLine($"Iniciando carga de dados para o tema: {root.NomeTema}");
@@ -192,39 +278,36 @@ namespace RevisaFacil.Helpers
                     {
                         var novaDisc = new Disciplina { Nome = d.Nome };
                         db.Disciplinas.Add(novaDisc);
-                        db.SaveChanges(); // Salva para gerar o ID da disciplina
+                        db.SaveChanges();
 
                         foreach (var a in d.Assuntos)
                         {
+                            // Padrão encadeado: 30d cada
                             db.Assuntos.Add(new Assunto
                             {
                                 Titulo = a.Titulo,
                                 DataInicio = a.DataInicio,
                                 DisciplinaId = novaDisc.Id,
-                                // Usa os valores padrão (30, 60...) se não houver no JSON
                                 Int1 = 30,
-                                Int2 = 60,
-                                Int3 = 90,
-                                Int4 = 120,
-                                Int5 = 150,
-                                Int6 = 180,
-                                Int7 = 210,
-                                Int8 = 240,
-                                Int9 = 270,
-                                Int10 = 300
+                                Int2 = 30,
+                                Int3 = 30,
+                                Int4 = 30,
+                                Int5 = 30,
+                                Int6 = 30,
+                                Int7 = 30,
+                                Int8 = 30,
+                                Int9 = 30,
+                                Int10 = 30
                             });
                         }
                     }
                     db.SaveChanges();
-
-                    // Sincroniza o calendário para que as datas das revisões apareçam imediatamente
                     SincronizarCalendarioGlobal();
-
                     System.Diagnostics.Debug.WriteLine("Seed concluído com sucesso.");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"Seed ignorado: O nome no JSON '{root?.NomeTema}' não coincide com o tema atual '{TemaAtual}'.");
+                    System.Diagnostics.Debug.WriteLine($"Seed ignorado: nome no JSON não coincide com tema atual.");
                 }
             }
             catch (Exception ex)
@@ -232,7 +315,6 @@ namespace RevisaFacil.Helpers
                 System.Diagnostics.Debug.WriteLine("Erro ao processar seed.json: " + ex.Message);
             }
         }
-
     }
 
     public class SeedRoot { public string NomeTema { get; set; } public List<DisciplinaSeed> Disciplinas { get; set; } }
@@ -241,10 +323,10 @@ namespace RevisaFacil.Helpers
     {
         public string Titulo { get; set; }
         public DateTime DataInicio { get; set; }
-        public int Int1 { get; set; } = 30; public int Int2 { get; set; } = 60;
-        public int Int3 { get; set; } = 90; public int Int4 { get; set; } = 120;
-        public int Int5 { get; set; } = 150; public int Int6 { get; set; } = 180;
-        public int Int7 { get; set; } = 210; public int Int8 { get; set; } = 240;
-        public int Int9 { get; set; } = 270; public int Int10 { get; set; } = 300;
+        public int Int1 { get; set; } = 30; public int Int2 { get; set; } = 30;
+        public int Int3 { get; set; } = 30; public int Int4 { get; set; } = 30;
+        public int Int5 { get; set; } = 30; public int Int6 { get; set; } = 30;
+        public int Int7 { get; set; } = 30; public int Int8 { get; set; } = 30;
+        public int Int9 { get; set; } = 30; public int Int10 { get; set; } = 30;
     }
 }

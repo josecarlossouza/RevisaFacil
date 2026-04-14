@@ -1,8 +1,14 @@
-﻿<!-- MainWindow.xaml -->
+﻿<!-- MainWindow.xaml — v1.3.0 -->
+<!-- ALTERAÇÕES:
+     1. Title atualizado para "RevisaFácil - Gerenciador de Estudos - v1.3.0"
+     2. Botão "Meus Assuntos" renomeado para "Minhas Revisões"
+     3. Botão "❓ Ajuda" movido para o final do rodapé (após Exportar e Importar)
+-->
 <Window x:Class="RevisaFacil.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="RevisaFacil - Gerenciador de Estudos" Height="650" Width="1100"
+        Title="RevisaFácil - Gerenciador de Estudos - v1.3.0"
+        Height="680" Width="1100"
         WindowStartupLocation="CenterScreen">
 
     <Grid>
@@ -11,11 +17,11 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Menu lateral -->
+        <!-- ── Menu lateral ── -->
         <Border Grid.Column="0" Background="#2C3E50">
-            <!-- DockPanel empurra os botões de exportar/importar para o fundo -->
             <DockPanel LastChildFill="False">
 
+                <!-- Topo: logo + temas + navegação -->
                 <StackPanel DockPanel.Dock="Top" Margin="10">
                     <TextBlock Text="MEUS ESTUDOS" Foreground="White" FontSize="18"
                                HorizontalAlignment="Center" Margin="0,20,0,10" FontWeight="Bold"/>
@@ -32,37 +38,50 @@
                     </StackPanel>
 
                     <!-- Navegação principal -->
-                    <Button x:Name="btnPainel"        Content="🏠 Painel"
-                            Click="btnPainel_Click"    Height="40" Margin="5"
+                    <Button x:Name="btnPainel"
+                            Content="🏠 Painel"
+                            Click="btnPainel_Click"
+                            Height="40" Margin="5"
                             Background="#34495E" Foreground="White" BorderThickness="0" Cursor="Hand"/>
 
-                    <Button x:Name="btnAssuntos"       Content="📚 Meus Assuntos"
-                            Click="btnAssuntos_Click"  Height="40" Margin="5"
+                    <!-- RENOMEADO: Meus Assuntos → Minhas Revisões -->
+                    <Button x:Name="btnAssuntos"
+                            Content="📚 Minhas Revisões"
+                            Click="btnAssuntos_Click"
+                            Height="40" Margin="5"
                             Background="#34495E" Foreground="White" BorderThickness="0" Cursor="Hand"/>
 
-                    <Button x:Name="btnCalendario"     Content="📅 Calendário"
-                            Click="NavCalendario_Click" Height="40" Margin="5"
+                    <Button x:Name="btnCalendario"
+                            Content="📅 Calendário"
+                            Click="NavCalendario_Click"
+                            Height="40" Margin="5"
                             Background="#34495E" Foreground="White" BorderThickness="0" Cursor="Hand"/>
 
-                    <Button x:Name="btnEstatisticas"   Content="📊 Estatísticas"
-                            Click="btnEstatisticas_Click" Height="40" Margin="5"
+                    <Button x:Name="btnEstatisticas"
+                            Content="📊 Estatísticas"
+                            Click="btnEstatisticas_Click"
+                            Height="40" Margin="5"
                             Background="#34495E" Foreground="White" BorderThickness="0" Cursor="Hand"/>
 
                     <Separator Background="#5D6D7E" Margin="10,20"/>
 
-                    <Button x:Name="btnNovaDisciplina" Content="➕ Nova Disciplina"
-                            Click="btnNovaDisciplina_Click" Height="40" Margin="5"
+                    <Button x:Name="btnNovaDisciplina"
+                            Content="➕ Nova Disciplina"
+                            Click="btnNovaDisciplina_Click"
+                            Height="40" Margin="5"
                             Background="#27AE60" Foreground="White" BorderThickness="0" Cursor="Hand"/>
 
-                    <Button x:Name="btnNovoAssunto"    Content="➕ Novo Assunto"
-                            Click="btnNovoAssunto_Click" Height="45" Margin="5"
+                    <Button x:Name="btnNovoAssunto"
+                            Content="➕ Novo Assunto"
+                            Click="btnNovoAssunto_Click"
+                            Height="45" Margin="5"
                             Background="#2980B9" Foreground="White" FontWeight="Bold"
                             BorderThickness="0" Cursor="Hand"/>
                 </StackPanel>
 
-                <!-- ✅ NOVOS BOTÕES: Exportar e Importar fixados no fundo do menu -->
+                <!-- Rodapé: Exportar + Importar + Ajuda (por último) -->
                 <StackPanel DockPanel.Dock="Bottom" Margin="10,0,10,15">
-                    <Separator Background="#5D6D7E" Margin="0,0,0,10"/>
+                    <Separator Background="#5D6D7E" Margin="0,0,0,8"/>
 
                     <Button x:Name="btnExportar"
                             Content="📤 Exportar Excel"
@@ -76,11 +95,29 @@
                     <Button x:Name="btnImportar"
                             Content="📥 Importar Excel"
                             Click="btnImportar_Click"
-                            Height="38"
+                            Height="38" Margin="0,0,0,8"
                             Background="#D35400" Foreground="White"
                             BorderThickness="0" Cursor="Hand"
                             FontSize="13" FontWeight="SemiBold"
                             ToolTip="Importa assuntos de um arquivo .xlsx exportado pelo RevisaFácil"/>
+
+                    <!-- Botão Ajuda — agora por último -->
+                    <Button x:Name="btnAjuda"
+                            Content="❓ Ajuda"
+                            Click="btnAjuda_Click"
+                            Height="34"
+                            Background="#5D6D7E" Foreground="White"
+                            BorderThickness="0" Cursor="Hand"
+                            FontSize="12"
+                            ToolTip="Como usar, novidades e informações sobre o RevisaFácil">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="📖 Como Usar o App"   Click="AjudaComoUsar_Click"/>
+                                <MenuItem Header="🆕 Novidades (v1.3.0)" Click="AjudaNovidades_Click"/>
+                                <MenuItem Header="ℹ️ Sobre"              Click="AjudaSobre_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
                 </StackPanel>
 
             </DockPanel>

@@ -1,16 +1,17 @@
-﻿// ExcelService.cs  (Services/)
-// Exporta e importa dados do RevisaFácil em formato .xlsx usando ClosedXML.
+﻿// ExcelService.cs — v1.3.0
+// ALTERAÇÕES:
+// 1. EscreverLinha(): células de revisões CONCLUÍDAS (RevNConcluida = true)
+//    e linhas de assuntos DESTACADOS (IsDestacado = true) são pintadas em verde.
+// 2. LerLinhas(): lê a cor de fundo das células e importa IsDestacado e status
+//    de cada revisão (verde → concluída).
+// 3. Importar(): aplica IsDestacado e RevNConcluida lidos do Excel.
 //
-// NuGet necessário (instale pelo Package Manager Console):
-//   Install-Package ClosedXML
+// Formato exportado (inalterado):
+//   Aba "Todos"        → Disciplina | Assunto | DataInicio | Rev1 | Rev2 | ... | RevN
+//   Aba "<Disciplina>" → Assunto | DataInicio | Rev1 | Rev2 | ... | RevN
 //
-// Formato do arquivo exportado:
-//   Aba "Todos"          → todas as disciplinas/assuntos juntos
-//   Aba "<Disciplina>"   → uma aba por disciplina, só os assuntos dela
-//
-// Colunas em cada aba:
-//   Disciplina | Assunto | DataInicio | Rev1 | Rev2 | ... | RevN
-//   (Disciplina só aparece na aba "Todos")
+// Verde no Excel = XLColor.FromArgb(39, 174, 96)  (#27AE60)
+// Verde claro na linha = XLColor.FromArgb(212, 239, 223) (#D4EFDF)
 
 using System;
 using System.Collections.Generic;
@@ -26,12 +27,12 @@ namespace RevisaFacil.Services
 {
     public static class ExcelService
     {
+        // ── Cores ─────────────────────────────────────────────────────────────────
+        private static readonly XLColor CorVerdeCelula = XLColor.FromArgb(39, 174, 96);   // botão verde = revisão concluída
+        private static readonly XLColor CorVerdeLinhaDestacada = XLColor.FromArgb(212, 239, 223); // linha destacada (#D4EFDF)
+
         // ── Exportar ──────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Exporta todos os assuntos do tema atual para um arquivo .xlsx.
-        /// Retorna o caminho do arquivo gerado.
-        /// </summary>
         public static string Exportar(string caminhoDestino)
         {
             int qtdRev = TemaManager.GetQuantidadeRevisoes();
@@ -55,7 +56,6 @@ namespace RevisaFacil.Services
                 EscreverLinha(wsTodos, linha, a, incluirDisciplina: true, qtdRev);
                 linha++;
             }
-
             FormatarPlanilha(wsTodos, incluirDisciplina: true, qtdRev, linha - 1);
 
             // ── Uma aba por disciplina ────────────────────────────────────────────
@@ -63,10 +63,8 @@ namespace RevisaFacil.Services
 
             foreach (var grupo in porDisciplina)
             {
-                // Nome da aba: máx 31 chars (limite do Excel), sem caracteres inválidos
                 string nomeAba = SanitizarNomeAba(grupo.Key);
                 var ws = wb.Worksheets.Add(nomeAba);
-
                 EscreverCabecalho(ws, incluirDisciplina: false, qtdRev);
 
                 int l = 2;
@@ -75,7 +73,6 @@ namespace RevisaFacil.Services
                     EscreverLinha(ws, l, a, incluirDisciplina: false, qtdRev);
                     l++;
                 }
-
                 FormatarPlanilha(ws, incluirDisciplina: false, qtdRev, l - 1);
             }
 
@@ -95,10 +92,6 @@ namespace RevisaFacil.Services
             public bool TemaNovosCriado { get; set; }
         }
 
-        /// <summary>
-        /// Importa de um .xlsx exportado por este serviço.
-        /// Usa somente a aba "Todos" como fonte de verdade.
-        /// </summary>
         public static ResultadoImportacao Importar(string caminhoArquivo)
         {
             var resultado = new ResultadoImportacao();
@@ -107,50 +100,43 @@ namespace RevisaFacil.Services
             {
                 using var wb = new XLWorkbook(caminhoArquivo);
 
-                // ── Valida formato ────────────────────────────────────────────────
                 if (!wb.Worksheets.Contains("Todos"))
                     return Erro("Formato inválido: aba 'Todos' não encontrada.");
 
                 var ws = wb.Worksheet("Todos");
 
-                // Lê cabeçalho para descobrir qtdRev do arquivo
                 var (qtdRevArquivo, erroHeader) = LerCabecalho(ws);
-                if (erroHeader != null)
-                    return Erro(erroHeader);
+                if (erroHeader != null) return Erro(erroHeader);
 
                 if (qtdRevArquivo < 1 || qtdRevArquivo > 30)
-                    return Erro($"Formato inválido: quantidade de revisões no arquivo ({qtdRevArquivo}) fora do intervalo permitido (1-30).");
+                    return Erro($"Formato inválido: quantidade de revisões ({qtdRevArquivo}) fora do intervalo 1-30.");
 
-                // Nome do tema = nome do arquivo sem extensão
                 string nomeTema = Path.GetFileNameWithoutExtension(caminhoArquivo);
 
-                // ── Lê linhas de dados ────────────────────────────────────────────
                 var linhas = LerLinhas(ws, qtdRevArquivo);
                 if (linhas == null)
                     return Erro("Formato inválido: erro ao ler os dados da aba 'Todos'.");
 
-                // ── Verifica/cria o tema ──────────────────────────────────────────
                 bool temaExistia = TemaManager.ListarTemas().Contains(nomeTema);
-                string temaAnterior = TemaManager.TemaAtual;
 
                 if (!temaExistia)
                 {
                     TemaManager.TemaAtual = nomeTema;
-                    using (var dbNovo = new EstudoDbContext(TemaManager.GetDbPath()))
-                        dbNovo.Database.EnsureCreated();
+                    using var dbNovo = new EstudoDbContext(TemaManager.GetDbPath());
+                    dbNovo.Database.EnsureCreated();
                     TemaManager.MigrarConfiguracoes();
+                    TemaManager.MigrarConfiguracoesDisciplinas();
                     resultado.TemaNovosCriado = true;
                 }
                 else
                 {
                     TemaManager.TemaAtual = nomeTema;
                     TemaManager.MigrarConfiguracoes();
+                    TemaManager.MigrarConfiguracoesDisciplinas();
                 }
 
-                // ── Persiste os dados ─────────────────────────────────────────────
                 using (var db = new EstudoDbContext(TemaManager.GetDbPath()))
                 {
-                    // Atualiza/cria configuração de qtdRev
                     var config = db.Configuracoes.FirstOrDefault();
                     if (config == null)
                     {
@@ -185,25 +171,34 @@ namespace RevisaFacil.Services
 
                         if (assunto == null)
                         {
-                            // Novo assunto
                             assunto = new Assunto
                             {
                                 Titulo = row.Titulo,
                                 DisciplinaId = disc.Id,
-                                DataInicio = row.DataInicio
+                                DataInicio = row.DataInicio,
+                                IsDestacado = row.IsDestacado
                             };
                             AplicarIntervalos(assunto, row.Intervalos, qtdRevArquivo);
+                            // Aplica status de revisões lido do Excel (cor verde)
+                            for (int i = 0; i < qtdRevArquivo; i++)
+                                assunto.SetRevConcluida(i + 1, row.RevisoesConcluidas[i]);
+
                             db.Assuntos.Add(assunto);
                             resultado.AssuntosNovos++;
                         }
                         else
                         {
-                            // Atualiza se algo mudou
                             bool mudou = false;
 
                             if (assunto.DataInicio.Date != row.DataInicio.Date)
                             {
                                 assunto.DataInicio = row.DataInicio;
+                                mudou = true;
+                            }
+
+                            if (assunto.IsDestacado != row.IsDestacado)
+                            {
+                                assunto.IsDestacado = row.IsDestacado;
                                 mudou = true;
                             }
 
@@ -214,6 +209,13 @@ namespace RevisaFacil.Services
                                 if (intervaloAtual != intervaloNovo)
                                 {
                                     DefinirIntervalo(assunto, i + 1, intervaloNovo);
+                                    mudou = true;
+                                }
+
+                                // Atualiza status de revisão se diferente
+                                if (assunto.GetRevConcluida(i + 1) != row.RevisoesConcluidas[i])
+                                {
+                                    assunto.SetRevConcluida(i + 1, row.RevisoesConcluidas[i]);
                                     mudou = true;
                                 }
                             }
@@ -253,29 +255,57 @@ namespace RevisaFacil.Services
                 ws.Cell(1, col++).Value = $"Rev{i}";
         }
 
+        /// <summary>
+        /// Escreve uma linha de dados e aplica cor verde nas células de revisões concluídas.
+        /// Se o assunto estiver destacado (IsDestacado), pinta toda a linha em verde claro.
+        /// </summary>
         private static void EscreverLinha(IXLWorksheet ws, int linha, Assunto a, bool incluirDisciplina, int qtdRev)
         {
-            int col = 1;
-            if (incluirDisciplina)
-                ws.Cell(linha, col++).Value = a.Disciplina?.Nome ?? "Sem Disciplina";
+            int colInicio = 1;
+            int col = colInicio;
 
-            ws.Cell(linha, col++).Value = a.Titulo;
+            if (incluirDisciplina)
+            {
+                var cellDisc = ws.Cell(linha, col++);
+                cellDisc.Value = a.Disciplina?.Nome ?? "Sem Disciplina";
+                if (a.IsDestacado)
+                    cellDisc.Style.Fill.BackgroundColor = CorVerdeLinhaDestacada;
+            }
+
+            var cellAssunto = ws.Cell(linha, col++);
+            cellAssunto.Value = a.Titulo;
+            if (a.IsDestacado)
+                cellAssunto.Style.Fill.BackgroundColor = CorVerdeLinhaDestacada;
 
             var cellData = ws.Cell(linha, col++);
             cellData.Value = a.DataInicio;
             cellData.Style.NumberFormat.Format = "DD/MM/YYYY";
+            if (a.IsDestacado)
+                cellData.Style.Fill.BackgroundColor = CorVerdeLinhaDestacada;
 
             for (int i = 1; i <= qtdRev; i++)
             {
                 var cellRev = ws.Cell(linha, col++);
                 cellRev.Value = a.GetDataRev(i);
                 cellRev.Style.NumberFormat.Format = "DD/MM/YYYY";
+
+                // Verde forte = revisão concluída
+                if (a.GetRevConcluida(i))
+                {
+                    cellRev.Style.Fill.BackgroundColor = CorVerdeCelula;
+                    cellRev.Style.Font.FontColor = XLColor.White;
+                    cellRev.Style.Font.Bold = true;
+                }
+                // Verde claro = assunto destacado mas revisão não concluída
+                else if (a.IsDestacado)
+                {
+                    cellRev.Style.Fill.BackgroundColor = CorVerdeLinhaDestacada;
+                }
             }
         }
 
         private static void FormatarPlanilha(IXLWorksheet ws, bool incluirDisciplina, int qtdRev, int ultimaLinha)
         {
-            // Cabeçalho em negrito com fundo azul escuro
             int totalCols = (incluirDisciplina ? 1 : 0) + 2 + qtdRev;
             var headerRange = ws.Range(1, 1, 1, totalCols);
             headerRange.Style.Font.Bold = true;
@@ -283,15 +313,13 @@ namespace RevisaFacil.Services
             headerRange.Style.Fill.BackgroundColor = XLColor.FromArgb(44, 62, 80);
             headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-            // Auto-fit nas colunas de texto; largura fixa nas datas
-            ws.Column(incluirDisciplina ? 1 : 1).Width = 28;
-            ws.Column(incluirDisciplina ? 2 : 1).Width = 35;
+            ws.Column(1).Width = 28;
+            ws.Column(2).Width = 35;
 
             int colData = (incluirDisciplina ? 3 : 2);
             for (int c = colData; c <= totalCols; c++)
                 ws.Column(c).Width = 14;
 
-            // Bordas na tabela de dados
             if (ultimaLinha >= 2)
             {
                 var dataRange = ws.Range(1, 1, ultimaLinha, totalCols);
@@ -301,11 +329,22 @@ namespace RevisaFacil.Services
                 dataRange.Style.Border.InsideBorderColor = XLColor.FromArgb(189, 195, 199);
             }
 
-            // Linhas alternadas
+            // Linhas alternadas — mas não sobrescreve células já coloridas
             for (int r = 2; r <= ultimaLinha; r++)
             {
                 if (r % 2 == 0)
-                    ws.Range(r, 1, r, totalCols).Style.Fill.BackgroundColor = XLColor.FromArgb(244, 247, 246);
+                {
+                    for (int c = 1; c <= totalCols; c++)
+                    {
+                        var cell = ws.Cell(r, c);
+                        // Só aplica a cor alternada se a célula não tiver cor personalizada
+                        if (cell.Style.Fill.BackgroundColor == XLColor.NoColor ||
+                            cell.Style.Fill.BackgroundColor == XLColor.White)
+                        {
+                            cell.Style.Fill.BackgroundColor = XLColor.FromArgb(244, 247, 246);
+                        }
+                    }
+                }
             }
         }
 
@@ -313,7 +352,6 @@ namespace RevisaFacil.Services
 
         private static (int qtdRev, string erro) LerCabecalho(IXLWorksheet ws)
         {
-            // Espera: Disciplina | Assunto | DataInicio | Rev1 | Rev2 | ...
             string col1 = ws.Cell(1, 1).GetString().Trim();
             string col2 = ws.Cell(1, 2).GetString().Trim();
             string col3 = ws.Cell(1, 3).GetString().Trim();
@@ -349,9 +387,16 @@ namespace RevisaFacil.Services
             public string NomeDisciplina { get; set; }
             public string Titulo { get; set; }
             public DateTime DataInicio { get; set; }
-            public int[] Intervalos { get; set; } // diferença em dias entre DataInicio e cada RevX
+            public int[] Intervalos { get; set; }
+            public bool[] RevisoesConcluidas { get; set; } // lido pela cor verde
+            public bool IsDestacado { get; set; }          // lido pela cor verde claro na linha
         }
 
+        /// <summary>
+        /// Lê as linhas de dados e detecta cor verde nas células de revisão.
+        /// Verde forte (#27AE60 / rgb 39,174,96) → revisão concluída.
+        /// Verde claro (#D4EFDF / rgb 212,239,223) em Disciplina ou Assunto → IsDestacado.
+        /// </summary>
         private static List<LinhaDados> LerLinhas(IXLWorksheet ws, int qtdRev)
         {
             var lista = new List<LinhaDados>();
@@ -367,19 +412,30 @@ namespace RevisaFacil.Services
                     throw new Exception($"Linha {linha}: assunto vazio.");
 
                 if (!TentarLerData(ws.Cell(linha, 3), out DateTime dataInicio))
-                    throw new Exception($"Linha {linha}: DataInicio inválida ('{ws.Cell(linha, 3).GetString()}').");
+                    throw new Exception($"Linha {linha}: DataInicio inválida.");
+
+                // Detecta IsDestacado pela cor de fundo da célula de Disciplina ou Assunto
+                bool isDestacado = EhVerdeClaro(ws.Cell(linha, 1)) || EhVerdeClaro(ws.Cell(linha, 2));
 
                 var intervalos = new int[qtdRev];
+                var revisoesConcluidas = new bool[qtdRev];
+
                 for (int i = 0; i < qtdRev; i++)
                 {
-                    if (!TentarLerData(ws.Cell(linha, 4 + i), out DateTime dataRev))
-                        throw new Exception($"Linha {linha}, Rev{i + 1}: data inválida ('{ws.Cell(linha, 4 + i).GetString()}').");
+                    var cellRev = ws.Cell(linha, 4 + i);
 
+                    if (!TentarLerData(cellRev, out DateTime dataRev))
+                        throw new Exception($"Linha {linha}, Rev{i + 1}: data inválida.");
+
+                    // Intervalo acumulado desde a data de início (compatível com a lógica encadeada)
                     int dias = (int)(dataRev.Date - dataInicio.Date).TotalDays;
                     if (dias < 1)
                         throw new Exception($"Linha {linha}, Rev{i + 1}: data de revisão deve ser posterior à DataInicio.");
 
                     intervalos[i] = dias;
+
+                    // Detecta revisão concluída pela cor verde da célula
+                    revisoesConcluidas[i] = EhVerdeConcluida(cellRev);
                 }
 
                 lista.Add(new LinhaDados
@@ -387,7 +443,9 @@ namespace RevisaFacil.Services
                     NomeDisciplina = disciplina,
                     Titulo = assunto,
                     DataInicio = dataInicio,
-                    Intervalos = intervalos
+                    Intervalos = intervalos,
+                    RevisoesConcluidas = revisoesConcluidas,
+                    IsDestacado = isDestacado
                 });
 
                 linha++;
@@ -396,9 +454,42 @@ namespace RevisaFacil.Services
             return lista;
         }
 
+        // ── Detecção de cor ───────────────────────────────────────────────────────
+
+        /// <summary>Verde forte = revisão concluída. rgb(39,174,96) = #27AE60</summary>
+        private static bool EhVerdeConcluida(IXLCell cell)
+        {
+            try
+            {
+                var bg = cell.Style.Fill.BackgroundColor;
+                if (bg.ColorType == XLColorType.Color)
+                {
+                    var c = bg.Color;
+                    return c.R == 39 && c.G == 174 && c.B == 96;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        /// <summary>Verde claro = assunto destacado. rgb(212,239,223) = #D4EFDF</summary>
+        private static bool EhVerdeClaro(IXLCell cell)
+        {
+            try
+            {
+                var bg = cell.Style.Fill.BackgroundColor;
+                if (bg.ColorType == XLColorType.Color)
+                {
+                    var c = bg.Color;
+                    return c.R == 212 && c.G == 239 && c.B == 223;
+                }
+            }
+            catch { }
+            return false;
+        }
+
         private static bool TentarLerData(IXLCell cell, out DateTime data)
         {
-            // ClosedXML pode retornar como DateTime diretamente ou como string
             try
             {
                 if (cell.DataType == XLDataType.DateTime)
@@ -407,9 +498,11 @@ namespace RevisaFacil.Services
                     return true;
                 }
                 string s = cell.GetString().Trim();
-                return DateTime.TryParseExact(s, new[] { "dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd" },
+                return DateTime.TryParseExact(s,
+                    new[] { "dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd" },
                     System.Globalization.CultureInfo.InvariantCulture,
-                    System.Globalization.DateTimeStyles.None, out data);
+                    System.Globalization.DateTimeStyles.None,
+                    out data);
             }
             catch { data = default; return false; }
         }
@@ -422,83 +515,14 @@ namespace RevisaFacil.Services
                 DefinirIntervalo(a, i + 1, intervalos[i]);
         }
 
-        private static int ObterIntervalo(Assunto a, int n) => n switch
-        {
-            1 => a.Int1,
-            2 => a.Int2,
-            3 => a.Int3,
-            4 => a.Int4,
-            5 => a.Int5,
-            6 => a.Int6,
-            7 => a.Int7,
-            8 => a.Int8,
-            9 => a.Int9,
-            10 => a.Int10,
-            11 => a.Int11,
-            12 => a.Int12,
-            13 => a.Int13,
-            14 => a.Int14,
-            15 => a.Int15,
-            16 => a.Int16,
-            17 => a.Int17,
-            18 => a.Int18,
-            19 => a.Int19,
-            20 => a.Int20,
-            21 => a.Int21,
-            22 => a.Int22,
-            23 => a.Int23,
-            24 => a.Int24,
-            25 => a.Int25,
-            26 => a.Int26,
-            27 => a.Int27,
-            28 => a.Int28,
-            29 => a.Int29,
-            30 => a.Int30,
-            _ => 30
-        };
+        private static int ObterIntervalo(Assunto a, int n) => a.GetIntervalo(n);
 
-        private static void DefinirIntervalo(Assunto a, int n, int valor)
-        {
-            switch (n)
-            {
-                case 1: a.Int1 = valor; break;
-                case 2: a.Int2 = valor; break;
-                case 3: a.Int3 = valor; break;
-                case 4: a.Int4 = valor; break;
-                case 5: a.Int5 = valor; break;
-                case 6: a.Int6 = valor; break;
-                case 7: a.Int7 = valor; break;
-                case 8: a.Int8 = valor; break;
-                case 9: a.Int9 = valor; break;
-                case 10: a.Int10 = valor; break;
-                case 11: a.Int11 = valor; break;
-                case 12: a.Int12 = valor; break;
-                case 13: a.Int13 = valor; break;
-                case 14: a.Int14 = valor; break;
-                case 15: a.Int15 = valor; break;
-                case 16: a.Int16 = valor; break;
-                case 17: a.Int17 = valor; break;
-                case 18: a.Int18 = valor; break;
-                case 19: a.Int19 = valor; break;
-                case 20: a.Int20 = valor; break;
-                case 21: a.Int21 = valor; break;
-                case 22: a.Int22 = valor; break;
-                case 23: a.Int23 = valor; break;
-                case 24: a.Int24 = valor; break;
-                case 25: a.Int25 = valor; break;
-                case 26: a.Int26 = valor; break;
-                case 27: a.Int27 = valor; break;
-                case 28: a.Int28 = valor; break;
-                case 29: a.Int29 = valor; break;
-                case 30: a.Int30 = valor; break;
-            }
-        }
+        private static void DefinirIntervalo(Assunto a, int n, int valor) => a.SetIntervalo(n, valor);
 
         // ── Utilitários ───────────────────────────────────────────────────────────
 
         private static string SanitizarNomeAba(string nome)
         {
-            // Caracteres proibidos no nome de abas do Excel: \ / ? * [ ] :
             foreach (char c in new[] { '\\', '/', '?', '*', '[', ']', ':' })
                 nome = nome.Replace(c, '-');
             return nome.Length > 31 ? nome.Substring(0, 31) : nome;

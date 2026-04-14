@@ -1,12 +1,12 @@
-﻿// MainView.xaml.cs
-// CORREÇÕES:
-//   1. txtLabelConcluidos atualizado dinamicamente com a qtdRev lida do banco
-//   2. Cálculo de "Concluídos", "Revisões Hoje", "Atrasadas" e "Concluídas Hoje"
-//      agora usa qtdRev em vez de 5 fixo
-//   3. Tabela de estatísticas por disciplina também usa qtdRev
+﻿// MainView.xaml.cs — v1.3.0
+// ALTERAÇÕES:
+// 1. ChartDisciplinas_DataClick: usa Window.GetWindow() para chamar
+//    MainWindow.NavegaParaRevisoes(), que faz a navegação via MainFrame.
+//    Isso resolve o problema de NavigationService ser null numa Page carregada em Frame.
 
 using System;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Collections.Generic;
 using System.Windows.Media;
@@ -17,7 +17,7 @@ using LiveCharts.Wpf;
 
 namespace RevisaFacil.Views
 {
-    // Classe de dados para cada linha da tabela de estatísticas
+    // ── Modelo de dados para a tabela de estatísticas por disciplina ──────────────
     public class EstatisticaDisciplina
     {
         public string NomeDisciplina { get; set; }
@@ -55,6 +55,7 @@ namespace RevisaFacil.Views
         public int RevisoesAtrasadas { get; set; }
     }
 
+    // ── Page ──────────────────────────────────────────────────────────────────────
     public partial class MainView : Page
     {
         public SeriesCollection SeriesCollection { get; set; }
@@ -69,135 +70,139 @@ namespace RevisaFacil.Views
         {
             try
             {
-                using (var db = new EstudoDbContext(TemaManager.GetDbPath()))
+                using var db = new EstudoDbContext(TemaManager.GetDbPath());
+
+                int qtdRev = TemaManager.GetQuantidadeRevisoes();
+                var todosAssuntos = db.Assuntos.ToList();
+                var hoje = DateTime.Today;
+
+                // ── Cards de resumo geral ─────────────────────────────────────────
+                int total = todosAssuntos.Count;
+
+                int concluidos = todosAssuntos.Count(a =>
                 {
-                    // ── Quantidade de revisões configurada pelo usuário ────────────
-                    // ✅ CORREÇÃO PRINCIPAL: lê qtdRev com fallback seguro caso a coluna
-                    //    ainda não exista no banco (evita crash durante a migração).
-                    int qtdRev = TemaManager.GetQuantidadeRevisoes();
+                    for (int i = 1; i <= qtdRev; i++)
+                        if (!a.GetRevConcluida(i)) return false;
+                    return true;
+                });
 
-                    var todosAssuntos = db.Assuntos.ToList();
-                    var hoje = DateTime.Today;
+                txtTotalAssuntos.Text = total.ToString();
+                txtConcluidos.Text = concluidos.ToString();
+                txtPendentes.Text = (total - concluidos).ToString();
+                txtLabelConcluidos.Text = $"Concluídos ({qtdRev} Revs)";
 
-                    // ── Cards de resumo geral ──────────────────────────────────────
-                    int total = todosAssuntos.Count;
+                // ── Card do dia ───────────────────────────────────────────────────
+                int revisoesHoje = todosAssuntos.Sum(a =>
+                {
+                    int c = 0;
+                    for (int i = 1; i <= qtdRev; i++)
+                        if (a.GetDataRev(i).Date == hoje && !a.GetRevConcluida(i)) c++;
+                    return c;
+                });
 
-                    // Um assunto é considerado "concluído" quando TODAS as qtdRev revisões
-                    // estão marcadas como concluídas.
-                    int concluidos = todosAssuntos.Count(a =>
+                int atrasadas = todosAssuntos.Sum(a =>
+                {
+                    int c = 0;
+                    for (int i = 1; i <= qtdRev; i++)
+                        if (a.GetDataRev(i).Date < hoje && !a.GetRevConcluida(i)) c++;
+                    return c;
+                });
+
+                int concluidasHoje = todosAssuntos.Sum(a =>
+                {
+                    int c = 0;
+                    for (int i = 1; i <= qtdRev; i++)
+                        if (a.GetDataRev(i).Date == hoje && a.GetRevConcluida(i)) c++;
+                    return c;
+                });
+
+                txtRevisoesHoje.Text = revisoesHoje.ToString();
+                txtRevisoesAtrasadas.Text = atrasadas.ToString();
+                txtConcluidasHoje.Text = concluidasHoje.ToString();
+
+                // ── Gráfico de pizza ──────────────────────────────────────────────
+                SeriesCollection = new SeriesCollection();
+
+                var dadosAgrupados = todosAssuntos
+                    .GroupBy(a => a.Disciplina?.Nome ?? "Sem Disciplina")
+                    .Select(g => new { Nome = g.Key, Qtd = g.Count() });
+
+                foreach (var item in dadosAgrupados)
+                {
+                    SeriesCollection.Add(new PieSeries
                     {
-                        for (int i = 1; i <= qtdRev; i++)
-                            if (!a.GetRevConcluida(i)) return false;
-                        return true;
+                        Title = item.Nome,
+                        Values = new ChartValues<int> { item.Qtd },
+                        DataLabels = true,
+                        LabelPoint = cp => $"{cp.Y} ({cp.Participation:P0})"
                     });
-                    int pendentes = total - concluidos;
-
-                    txtTotalAssuntos.Text = total.ToString();
-                    txtConcluidos.Text = concluidos.ToString();
-                    txtPendentes.Text = pendentes.ToString();
-
-                    // ✅ LABEL DINÂMICO: acompanha a quantidade de revisões do usuário
-                    txtLabelConcluidos.Text = $"Concluídos ({qtdRev} Revs)";
-
-                    // ── Card de resumo do dia ──────────────────────────────────────
-                    int revisoesHoje = todosAssuntos.Sum(a =>
-                    {
-                        int count = 0;
-                        for (int i = 1; i <= qtdRev; i++)
-                            if (a.GetDataRev(i).Date == hoje && !a.GetRevConcluida(i)) count++;
-                        return count;
-                    });
-
-                    int atrasadas = todosAssuntos.Sum(a =>
-                    {
-                        int count = 0;
-                        for (int i = 1; i <= qtdRev; i++)
-                            if (a.GetDataRev(i).Date < hoje && !a.GetRevConcluida(i)) count++;
-                        return count;
-                    });
-
-                    int concluidasHoje = todosAssuntos.Sum(a =>
-                    {
-                        int count = 0;
-                        for (int i = 1; i <= qtdRev; i++)
-                            if (a.GetDataRev(i).Date == hoje && a.GetRevConcluida(i)) count++;
-                        return count;
-                    });
-
-                    txtRevisoesHoje.Text = revisoesHoje.ToString();
-                    txtRevisoesAtrasadas.Text = atrasadas.ToString();
-                    txtConcluidasHoje.Text = concluidasHoje.ToString();
-
-                    // ── Gráfico de Pizza por Disciplina ───────────────────────────
-                    SeriesCollection = new SeriesCollection();
-                    var dadosAgrupados = todosAssuntos
-                        .GroupBy(a => a.Disciplina?.Nome ?? "Sem Disciplina")
-                        .Select(g => new { Nome = g.Key, Qtd = g.Count() });
-
-                    foreach (var item in dadosAgrupados)
-                    {
-                        SeriesCollection.Add(new PieSeries
-                        {
-                            Title = item.Nome,
-                            Values = new ChartValues<int> { item.Qtd },
-                            DataLabels = true,
-                            LabelPoint = chartPoint => $"{chartPoint.Y} ({chartPoint.Participation:P0})"
-                        });
-                    }
-                    chartDisciplinas.Series = SeriesCollection;
-
-                    // ── Tabela de estatísticas por disciplina ──────────────────────
-                    var estatisticas = new List<EstatisticaDisciplina>();
-
-                    var porDisciplina = todosAssuntos
-                        .GroupBy(a => a.Disciplina?.Nome ?? "Sem Disciplina");
-
-                    foreach (var grupo in porDisciplina.OrderBy(g => g.Key))
-                    {
-                        var assuntos = grupo.ToList();
-                        int totalAssuntos = assuntos.Count;
-                        int totalRevisoesPossiveis = totalAssuntos * qtdRev;
-
-                        int revisoesConcluidasTotal = assuntos.Sum(a =>
-                        {
-                            int c = 0;
-                            for (int i = 1; i <= qtdRev; i++)
-                                if (a.GetRevConcluida(i)) c++;
-                            return c;
-                        });
-
-                        double taxa = totalRevisoesPossiveis > 0
-                            ? (revisoesConcluidasTotal * 100.0) / totalRevisoesPossiveis
-                            : 0;
-
-                        var diasDeAtraso = new List<double>();
-                        foreach (var a in assuntos)
-                        {
-                            for (int i = 1; i <= qtdRev; i++)
-                            {
-                                if (a.GetDataRev(i).Date < hoje && !a.GetRevConcluida(i))
-                                    diasDeAtraso.Add((hoje - a.GetDataRev(i).Date).TotalDays);
-                            }
-                        }
-
-                        double atrasoMedio = diasDeAtraso.Count > 0 ? diasDeAtraso.Average() : 0;
-
-                        estatisticas.Add(new EstatisticaDisciplina
-                        {
-                            NomeDisciplina = grupo.Key,
-                            TotalAssuntos = totalAssuntos,
-                            TaxaConclusao = taxa,
-                            AtrasoMedioDias = atrasoMedio,
-                            RevisoesAtrasadas = diasDeAtraso.Count
-                        });
-                    }
-
-                    dgEstatisticas.ItemsSource = estatisticas;
                 }
+
+                chartDisciplinas.Series = SeriesCollection;
+
+                // ── Tabela de estatísticas por disciplina ─────────────────────────
+                var estatisticas = new List<EstatisticaDisciplina>();
+
+                foreach (var grupo in todosAssuntos.GroupBy(a => a.Disciplina?.Nome ?? "Sem Disciplina").OrderBy(g => g.Key))
+                {
+                    var assuntos = grupo.ToList();
+                    int totalPossivel = assuntos.Count * qtdRev;
+
+                    int concluidsGrupo = assuntos.Sum(a =>
+                    {
+                        int c = 0;
+                        for (int i = 1; i <= qtdRev; i++)
+                            if (a.GetRevConcluida(i)) c++;
+                        return c;
+                    });
+
+                    double taxa = totalPossivel > 0 ? (concluidsGrupo * 100.0) / totalPossivel : 0;
+
+                    var diasAtraso = new List<double>();
+                    foreach (var a in assuntos)
+                        for (int i = 1; i <= qtdRev; i++)
+                            if (a.GetDataRev(i).Date < hoje && !a.GetRevConcluida(i))
+                                diasAtraso.Add((hoje - a.GetDataRev(i).Date).TotalDays);
+
+                    estatisticas.Add(new EstatisticaDisciplina
+                    {
+                        NomeDisciplina = grupo.Key,
+                        TotalAssuntos = assuntos.Count,
+                        TaxaConclusao = taxa,
+                        AtrasoMedioDias = diasAtraso.Count > 0 ? diasAtraso.Average() : 0,
+                        RevisoesAtrasadas = diasAtraso.Count
+                    });
+                }
+
+                dgEstatisticas.ItemsSource = estatisticas;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("Erro ao carregar MainView: " + ex.Message);
+            }
+        }
+
+        // ── Clique no gráfico de pizza ────────────────────────────────────────────
+
+        /// <summary>
+        /// DataClick do LiveCharts: dispara ao clicar em qualquer fatia do gráfico.
+        /// Delega a navegação para MainWindow.NavegaParaRevisoes() porque
+        /// NavigationService é null quando a Page está dentro de um Frame filho.
+        /// </summary>
+        private void ChartDisciplinas_DataClick(object sender, LiveCharts.ChartPoint chartPoint)
+        {
+            try
+            {
+                string nomeDisciplina = chartPoint.SeriesView?.Title;
+                if (string.IsNullOrEmpty(nomeDisciplina)) return;
+
+                // Obtém a MainWindow pai e delega a navegação
+                if (Window.GetWindow(this) is MainWindow mainWindow)
+                    mainWindow.NavegaParaRevisoes(nomeDisciplina);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Erro no clique do gráfico: " + ex.Message);
             }
         }
     }
