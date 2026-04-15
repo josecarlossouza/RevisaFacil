@@ -1,10 +1,18 @@
-﻿<!-- AssuntosPage.xaml -->
-<!-- MODIFICAÇÕES:
-     1. Exibe UMA disciplina por vez. O usuário troca pelo ComboBox de disciplinas.
-     2. Controle de qtd de revisões e os intervalos do cabeçalho afetam
-        APENAS a disciplina atual (não mais todas as disciplinas).
-     3. Título dinâmico mostrando a disciplina atual.
-     4. Busca de assunto continua filtrando dentro da disciplina atual. -->
+﻿<!-- AssuntosPage.xaml — v1.3.2
+     CORREÇÃO DEFINITIVA da edição de data de início:
+     
+     A coluna "Início" agora é IsReadOnly="True" — ela NUNCA entra em modo de
+     edição nativo do DataGrid (que era a raiz de todos os conflitos anteriores).
+     
+     Ao dar duplo clique na célula "Início", o code-behind abre um pequeno Popup
+     flutuante com um DatePicker já com o calendário aberto. O usuário escolhe a
+     data e o Popup fecha sozinho, salvando no banco.
+     
+     Isso elimina:
+       - O problema do CellEditingTemplate não ativar
+       - O crash "Refresh não é permitido durante AddNew/EditItem"
+       - A necessidade de BeginEdit/CommitEdit/CancelEdit
+-->
 <Page x:Class="RevisaFacil.Views.AssuntosPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -71,11 +79,35 @@
             </StackPanel>
         </Border>
 
+        <!-- Popup flutuante para edição de data de início.
+             Aberto programaticamente pelo duplo clique na coluna "Início".
+             StaysOpen="False" faz o Popup fechar ao clicar fora. -->
+        <Popup x:Name="popupDataInicio"
+               StaysOpen="False"
+               AllowsTransparency="True"
+               Placement="Mouse"
+               PopupAnimation="Fade"
+               Closed="PopupDataInicio_Closed">
+            <Border Background="White" BorderBrush="#D5DBDB" BorderThickness="1"
+                    CornerRadius="6" Padding="8"
+                    Effect="{x:Null}">
+                <StackPanel>
+                    <TextBlock x:Name="txtPopupLabel" Text="Selecione a nova data de início:"
+                               FontSize="12" Foreground="#34495E" Margin="0,0,0,6"/>
+                    <DatePicker x:Name="dpPopup"
+                                Language="pt-BR"
+                                FontSize="13"
+                                IsDropDownOpen="True"
+                                SelectedDateChanged="DpPopup_SelectedDateChanged"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+
         <!-- DataGrid com scroll horizontal -->
         <ScrollViewer Grid.Row="4" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <DataGrid x:Name="dgAssuntos" AutoGenerateColumns="False" CanUserAddRows="False"
-                      Background="White" CellEditEnding="DgAssuntos_CellEditEnding"
-                      HorizontalScrollBarVisibility="Auto">
+                      Background="White" HorizontalScrollBarVisibility="Auto"
+                      IsReadOnly="True">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
                         <EventSetter Event="MouseDoubleClick" Handler="DataGridRow_MouseDoubleClick"/>
@@ -90,13 +122,26 @@
                     </Style>
                 </DataGrid.RowStyle>
 
-                <!-- Colunas fixas: SEM coluna Disciplina (já está no título/seletor) -->
                 <DataGrid.Columns>
+                    <!-- Coluna Assunto: duplo clique alterna IsDestacado -->
                     <DataGridTextColumn Header="Assunto" Binding="{Binding Titulo}"
                                         Width="220" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Início"
-                                        Binding="{Binding DataInicio, StringFormat=\{0:dd/MM/yyyy\}, UpdateSourceTrigger=PropertyChanged}"
-                                        Width="100"/>
+
+                    <!-- Coluna Início: duplo clique abre o Popup com DatePicker.
+                         Tooltip orienta o usuário. -->
+                    <DataGridTemplateColumn Header="Início" Width="130" SortMemberPath="DataInicio"
+                                            IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DataInicio, StringFormat=\{0:dd/MM/yyyy\}}"
+                                           VerticalAlignment="Center" Margin="4,0"
+                                           FontSize="13"
+                                           ToolTip="Duplo clique para alterar a data de início"
+                                           Cursor="Hand"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
                     <!-- Colunas de revisão geradas dinamicamente no code-behind -->
                 </DataGrid.Columns>
             </DataGrid>
