@@ -1,4 +1,4 @@
-# 📚 RevisaFácil
+# RevisaFácil
 
 ![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white)
 ![.NET 8](https://img.shields.io/badge/.NET%208-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
@@ -10,7 +10,7 @@ O sistema substitui planilhas complexas, automatizando o cálculo de prazos e of
 
 ---
 
-## 📸 Demonstração
+## Demonstração
 
 ### Dashboard Principal
 ![Dashboard Principal](assets/dashboard.PNG)
@@ -23,7 +23,7 @@ O sistema substitui planilhas complexas, automatizando o cálculo de prazos e of
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
 - **Ciclos de Revisão Automatizados:** Calcula automaticamente as revisões de 30, 60, 90, 120 e 150 dias.
 - **Calendário Dinâmico:** Interface moderna para anotações diárias com cards coloridos que indicam atividades e limpeza automática de registros vazios.
@@ -40,7 +40,7 @@ O sistema substitui planilhas complexas, automatizando o cálculo de prazos e of
 - **Recursos Avançados:** Lazy Loading Proxies, CommunityToolkit.Mvvm
 - **Integrações:** Telegram.Bot API, LiveCharts.Wpf
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 - `Data/`: Contexto do banco de dados e configurações Fluent API.
 - `Models/`: Entidades (Disciplina, Assunto, NotaCalendario, Configuracao).
@@ -48,7 +48,7 @@ O sistema substitui planilhas complexas, automatizando o cálculo de prazos e of
 - `Helpers/`: Conversores de UI (Converters) e lógica de temas.
 - `Services/`: Serviços de notificação e lógica de negócio externa.
 
-## 🔧 Como Executar
+## Como Executar
 
 1. **Clone o repositório:**
    ```bash
